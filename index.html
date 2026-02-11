@@ -1,0 +1,4183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💕 Lindsay's Love Quest 💕</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Quicksand:wght@400;700&family=Dancing+Script:wght@700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Quicksand', sans-serif;
+            overflow: hidden;
+        }
+        
+        #game-container {
+            width: 800px;
+            height: 600px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 20px;
+            box-shadow: 
+                0 0 60px rgba(255, 105, 180, 0.4),
+                0 0 100px rgba(255, 105, 180, 0.2),
+                inset 0 0 60px rgba(255, 105, 180, 0.1);
+            position: relative;
+            overflow: hidden;
+            border: 4px solid #ff69b4;
+            transition: transform 0.05s;
+        }
+        
+        #game-container.shake {
+            animation: shake 0.3s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-0.5deg); }
+            75% { transform: translateX(5px) rotate(0.5deg); }
+        }
+        
+        /* Animated background */
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .arcade-title {
+            font-family: 'Press Start 2P', cursive;
+            color: #ff69b4;
+            text-shadow:
+                0 0 6px rgba(255, 105, 180, 0.5),
+                0 0 12px rgba(255, 20, 147, 0.2);
+        }
+        
+        /* Title Screen */
+        #title-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding-top: 30px;
+            z-index: 100;
+        }
+        
+        #title-screen h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            animation: titlePulse 2s infinite;
+        }
+        
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        #title-screen .subtitle {
+            color: #ffd1dc;
+            font-size: 18px;
+            margin-bottom: 30px;
+            font-family: 'Dancing Script', cursive;
+            font-size: 28px;
+        }
+        
+        .character-display {
+            margin: 20px 0 30px;
+            position: relative;
+        }
+        
+        .character-display .char {
+            font-size: 70px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.5));
+        }
+        
+        .character-display .char:nth-child(1) { animation-delay: 0s; }
+        .character-display .char:nth-child(2) { animation-delay: 0.5s; animation: heartPulse 1s infinite; }
+        .character-display .char:nth-child(3) { animation-delay: 0.3s; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes heartPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+        
+        .start-btn {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            padding: 20px 50px;
+            background: linear-gradient(180deg, #ff69b4 0%, #ff1493 100%);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 
+                0 8px 0 #c71585, 
+                0 0 30px rgba(255, 105, 180, 0.6),
+                inset 0 -5px 20px rgba(0,0,0,0.2);
+            transition: all 0.1s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .start-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: btnShine 3s infinite;
+        }
+        
+        @keyframes btnShine {
+            0% { left: -100%; }
+            50%, 100% { left: 100%; }
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 11px 0 #c71585, 0 0 50px rgba(255, 105, 180, 0.8);
+        }
+        
+        .start-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 3px 0 #c71585;
+        }
+        
+        .instructions {
+            color: #aaa;
+            font-size: 11px;
+            margin-top: 40px;
+            font-family: 'Press Start 2P', cursive;
+            animation: blink 1.5s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.5; }
+        }
+        
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: #ffd1dc;
+            z-index: 50;
+            pointer-events: none;
+        }
+        
+        .hud-section {
+            background: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 105, 180, 0.3);
+        }
+        
+        .love-meter {
+            width: 180px;
+            height: 16px;
+            background: linear-gradient(180deg, #222 0%, #333 100%);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #ff69b4;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+            margin-top: 4px;
+        }
+        
+        .love-meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff69b4, #ff1493, #ff69b4, #ffd700);
+            background-size: 300% 100%;
+            animation: meterShimmer 2s infinite linear;
+            transition: width 0.3s ease-out;
+            box-shadow: 0 0 10px #ff69b4;
+            position: relative;
+        }
+        
+        .love-meter-fill::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 20px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4));
+        }
+        
+        @keyframes meterShimmer {
+            0% { background-position: 300% 0; }
+            100% { background-position: 0% 0; }
+        }
+        
+        /* Phase 1: Heart Catcher */
+        #phase1 {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+        
+        .heart {
+            position: absolute;
+            font-size: 32px;
+            user-select: none;
+            filter: drop-shadow(0 0 15px currentColor);
+            transition: transform 0.1s;
+            z-index: 10;
+        }
+        
+        .heart.good {
+            color: #ff1493;
+            background: rgba(255, 255, 255, 0.93);
+            border-radius: 14px;
+            padding: 2px 8px;
+            font-size: 22px;
+            filter: drop-shadow(0 0 10px rgba(255,105,180,0.5));
+            animation: heartSpin 2s linear infinite;
+        }
+        .heart.good::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid rgba(255, 255, 255, 0.93);
+        }
+        .heart.bonus {
+            font-size: 40px;
+            animation: pillRainbow 0.8s infinite linear, pillWave 0.5s infinite ease-in-out;
+        }
+        .heart.bad {
+            color: #444;
+            filter: drop-shadow(0 0 10px #666) grayscale(80%);
+        }
+        .heart.powerup {
+            color: #00ffff;
+            font-size: 40px;
+            animation: rainbowGlow 1s infinite;
+        }
+
+        @keyframes heartSpin {
+            0% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+            100% { transform: rotate(-5deg); }
+        }
+
+        @keyframes bonusPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        @keyframes pillRainbow {
+            0% { filter: hue-rotate(0deg) brightness(1.5) drop-shadow(0 0 10px #ff0000); }
+            33% { filter: hue-rotate(120deg) brightness(1.5) drop-shadow(0 0 10px #00ff00); }
+            66% { filter: hue-rotate(240deg) brightness(1.5) drop-shadow(0 0 10px #0000ff); }
+            100% { filter: hue-rotate(360deg) brightness(1.5) drop-shadow(0 0 10px #ff0000); }
+        }
+
+        @keyframes pillWave {
+            0%, 100% { transform: translateY(0) rotate(-8deg); }
+            50% { transform: translateY(-6px) rotate(8deg); }
+        }
+        
+        @keyframes rainbowGlow {
+            0% { filter: drop-shadow(0 0 20px #ff0000) hue-rotate(0deg); }
+            100% { filter: drop-shadow(0 0 20px #ff0000) hue-rotate(360deg); }
+        }
+        
+        #catcher {
+            position: absolute;
+            bottom: 100px;
+            width: 120px;
+            height: 70px;
+            background: linear-gradient(180deg, #ff8fab 0%, #ff69b4 50%, #ff1493 100%);
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            box-shadow: 
+                0 0 30px rgba(255, 105, 180, 0.8),
+                inset 0 -10px 20px rgba(0,0,0,0.2),
+                inset 0 10px 20px rgba(255,255,255,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 35px;
+            z-index: 20;
+            transition: transform 0.05s;
+        }
+        
+        #catcher::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            width: 30px;
+            height: 15px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 50%;
+        }
+        
+        #catcher.catching {
+            transform: scale(1.1);
+        }
+
+        #catcher.shrunk {
+            width: 70px;
+            height: 42px;
+            font-size: 22px;
+        }
+        
+        /* Phase 2: Love Letter */
+        #phase2 {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .letter-box {
+            background: linear-gradient(180deg, #fff5f5 0%, #ffe4ec 100%);
+            padding: 40px 50px;
+            border-radius: 15px;
+            box-shadow: 
+                0 15px 40px rgba(0,0,0,0.4),
+                0 0 0 5px #ff69b4,
+                inset 0 0 30px rgba(255, 105, 180, 0.1);
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .letter-box::before {
+            content: '💌';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 50px;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+        }
+        
+        .letter-box h2 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            color: #ff1493;
+            margin-bottom: 25px;
+            margin-top: 15px;
+        }
+        
+        .word-display {
+            font-size: 42px;
+            color: #ff69b4;
+            margin: 25px 0;
+            letter-spacing: 8px;
+            font-weight: bold;
+            font-family: 'Press Start 2P', cursive;
+            min-height: 60px;
+            max-width: 95%;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+        
+        .word-display .typed {
+            color: #ff1493;
+            text-shadow: 0 0 10px #ff1493;
+        }
+        
+        .word-display .remaining {
+            color: #ffccd5;
+        }
+        
+        .word-display .cursor {
+            display: inline-block;
+            width: 4px;
+            height: 40px;
+            background: #ff1493;
+            margin-left: 5px;
+            animation: cursorBlink 0.5s infinite;
+            vertical-align: middle;
+        }
+        
+        @keyframes cursorBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        #type-input {
+            font-size: 24px;
+            padding: 15px 30px;
+            border: 3px solid #ff69b4;
+            border-radius: 12px;
+            outline: none;
+            text-align: center;
+            width: 320px;
+            background: white;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: bold;
+            color: #ff1493;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        #type-input:focus {
+            border-color: #ff1493;
+            box-shadow: 0 0 25px rgba(255, 105, 180, 0.6);
+        }
+        
+        .timer-bar {
+            width: 100%;
+            height: 12px;
+            background: #eee;
+            border-radius: 6px;
+            margin-top: 25px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff1493, #ff69b4);
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px #ff69b4;
+        }
+        
+        .timer-fill.urgent {
+            background: linear-gradient(90deg, #ff0000, #ff4444);
+            animation: urgentPulse 0.3s infinite;
+        }
+        
+        @keyframes urgentPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .words-counter {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: #ff69b4;
+        }
+        
+        /* Phase 3: Minigolf */
+        #phase3 {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        #golf-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            z-index: 1;
+        }
+
+        .golf-scoreboard {
+            position: absolute;
+            top: 55px;
+            right: 15px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: #FFD700;
+            background: linear-gradient(180deg, #5a3a1a 0%, #3a2510 100%);
+            padding: 10px 16px;
+            border-radius: 4px;
+            border: 2px solid #8B7355;
+            box-shadow: 0 0 10px rgba(139, 115, 85, 0.4), inset 0 1px 0 rgba(255,255,200,0.15);
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        #golf-reaction {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            color: #fff;
+            background: linear-gradient(180deg, rgba(90, 58, 26, 0.95) 0%, rgba(42, 26, 10, 0.95) 100%);
+            padding: 20px 30px;
+            border-radius: 8px;
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0;
+            max-width: 80%;
+            line-height: 1.6;
+        }
+
+        #golf-reaction.show {
+            animation: golfReactionIn 0.3s ease-out forwards;
+        }
+
+        #golf-reaction.hide {
+            animation: golfReactionOut 0.4s ease-in forwards;
+        }
+
+        @keyframes golfReactionIn {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            60% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        @keyframes golfReactionOut {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+        }
+
+        .golf-instruction {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 11px;
+            color: #FFD700;
+            z-index: 15;
+            animation: golfHintPulse 1.5s infinite;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 150, 50, 0.3);
+            pointer-events: none;
+        }
+
+        @keyframes golfHintPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        /* Grand Finale */
+        #finale {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        .finale-message {
+            text-align: center;
+            z-index: 10;
+            padding: 20px 30px;
+        }
+
+        .finale-message h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 18px;
+            color: #ff69b4;
+            text-shadow: 0 0 30px #ff69b4, 0 0 60px #ff1493;
+            margin-bottom: 15px;
+            animation: rainbowTitle 4s infinite;
+        }
+        
+        @keyframes rainbowTitle {
+            0%, 100% { color: #ff69b4; text-shadow: 0 0 30px #ff69b4; }
+            25% { color: #ff1493; text-shadow: 0 0 30px #ff1493; }
+            50% { color: #ffd700; text-shadow: 0 0 30px #ffd700; }
+            75% { color: #ff69b4; text-shadow: 0 0 30px #ff69b4; }
+        }
+        
+        .finale-message .love-letter {
+            font-family: 'Dancing Script', cursive;
+            font-size: 22px;
+            color: #ffd1dc;
+            line-height: 1.5;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .finale-message .love-letter .line {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .finale-message .love-letter .line.visible {
+            animation: lineReveal 0.8s forwards;
+        }
+        
+        @keyframes lineReveal {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .finale-heart {
+            font-size: 70px;
+            margin-top: 15px;
+            animation: finalHeartbeat 1s infinite;
+            filter: drop-shadow(0 0 30px #ff69b4);
+        }
+        
+        @keyframes finalHeartbeat {
+            0%, 100% { transform: scale(1); }
+            15% { transform: scale(1.15); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.25); }
+        }
+        
+        .final-score {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            color: #ffd700;
+            margin-top: 15px;
+            text-shadow: 0 0 10px #ffd700;
+        }
+
+        .replay-btn {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            padding: 12px 25px;
+            background: linear-gradient(180deg, #ff69b4 0%, #ff1493 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 5px 0 #c71585;
+            transition: all 0.1s;
+        }
+        
+        .replay-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 0 #c71585;
+        }
+        
+        /* Fireworks */
+        .firework {
+            position: absolute;
+            pointer-events: none;
+        }
+        
+        .firework-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: fireworkExplode 1s forwards;
+        }
+        
+        @keyframes fireworkExplode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+        
+        /* Particle effects */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .catch-particle {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: particleBurst 0.6s forwards;
+        }
+        
+        @keyframes particleBurst {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+        
+        /* Animations */
+        @keyframes hitPop {
+            0% { transform: scale(0.5) translateY(0); opacity: 1; }
+            50% { transform: scale(1.3) translateY(-20px); }
+            100% { transform: scale(1) translateY(-50px); opacity: 0; }
+        }
+        
+        /* Phase transition */
+        .phase-announcement {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+        }
+        
+        .phase-announcement h2 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 28px;
+            color: #ff69b4;
+            text-shadow: 0 0 30px #ff69b4, 0 0 60px #ff1493;
+            animation: announceIn 0.5s ease-out;
+        }
+        
+        @keyframes announceIn {
+            from { transform: scale(2); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .phase-announcement .phase-icon {
+            font-size: 80px;
+            margin: 25px 0;
+            animation: iconBounce 0.5s ease-out;
+        }
+        
+        @keyframes iconBounce {
+            0% { transform: scale(0) rotate(-180deg); }
+            60% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        
+        .phase-announcement p {
+            color: #ffd1dc;
+            font-size: 16px;
+            margin-top: 10px;
+            font-family: 'Quicksand', sans-serif;
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Score popup */
+        .score-popup {
+            position: absolute;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 18px;
+            color: #ffd700;
+            pointer-events: none;
+            text-shadow: 0 0 10px #ffd700, 2px 2px 0 #c71585;
+            animation: scoreFloat 0.8s forwards;
+            z-index: 150;
+        }
+        
+        .score-popup.big {
+            font-size: 28px;
+            color: #00ff64;
+            text-shadow: 0 0 20px #00ff64;
+        }
+        
+        @keyframes scoreFloat {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
+        }
+
+        .hint-text-popup {
+            position: absolute;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            line-height: 1.4;
+            color: #fff;
+            pointer-events: none;
+            text-shadow: 0 0 8px #ff69b4;
+            animation: hintFloat 5s forwards;
+            z-index: 150;
+            max-width: 300px;
+            text-align: center;
+            background: rgba(0,0,0,0.75);
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #ff69b4;
+        }
+
+        @keyframes hintFloat {
+            0% { opacity: 1; transform: translateY(0) scale(0.8); }
+            15% { transform: translateY(-10px) scale(1); }
+            100% { opacity: 0; transform: translateY(-80px) scale(0.9); }
+        }
+
+        #kiss-transition {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 200;
+        }
+
+        #kiss-canvas {
+            width: 320px;
+            height: 320px;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .kiss-label {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            color: #ff69b4;
+            text-shadow: 0 0 20px #ff69b4;
+            margin-top: 20px;
+            animation: titlePulse 2s infinite;
+        }
+
+        .kiss-sublabel {
+            font-family: 'Dancing Script', cursive;
+            font-size: 22px;
+            color: #ffd1dc;
+            margin-top: 10px;
+        }
+
+        #date-transition {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 200;
+        }
+
+        #date-canvas {
+            width: 320px;
+            height: 320px;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Sound toggle */
+        #sound-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        #sound-toggle:hover {
+            opacity: 1;
+        }
+        
+        /* Mobile Responsive */
+        @media screen and (max-width: 850px) {
+            #game-container {
+                width: 100vw;
+                height: 100vh;
+                max-width: 100%;
+                max-height: 100%;
+                border-radius: 0;
+                border: none;
+            }
+            
+            body {
+                overflow: hidden;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+            }
+            
+            #title-screen h1 {
+                font-size: 14px;
+                padding: 0 10px;
+            }
+            
+            #title-screen .subtitle {
+                font-size: 20px;
+            }
+            
+            .character-display .char {
+                font-size: 50px;
+            }
+            
+            .start-btn {
+                font-size: 12px;
+                padding: 15px 30px;
+            }
+            
+            .instructions {
+                font-size: 8px;
+                padding: 0 20px;
+            }
+            
+            #hud {
+                font-size: 8px;
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .hud-section {
+                padding: 5px 8px;
+            }
+            
+            .love-meter {
+                width: 120px;
+                height: 12px;
+            }
+            
+            #catcher {
+                width: 100px;
+                height: 60px;
+                bottom: 120px;
+                font-size: 45px;
+            }
+            
+            .heart {
+                font-size: 28px;
+            }
+            
+            .heart.bonus {
+                font-size: 35px;
+            }
+            
+            .phase-title h2 {
+                font-size: 18px !important;
+            }
+            
+            .phase-title p {
+                font-size: 10px !important;
+            }
+            
+            #quiz-container {
+                padding: 15px !important;
+            }
+            
+            #quiz-container h3 {
+                font-size: 12px !important;
+            }
+            
+            .word-display {
+                font-size: 22px !important;
+                letter-spacing: 4px !important;
+            }
+            
+            #type-input {
+                width: 90% !important;
+                font-size: 18px !important;
+            }
+            
+            .answer-btn {
+                font-size: 10px !important;
+                padding: 12px !important;
+            }
+            
+            #photo-gallery .photo {
+                width: 60px !important;
+                height: 60px !important;
+            }
+            
+            #message-bubble {
+                font-size: 14px !important;
+                max-width: 85% !important;
+            }
+            
+            #final-screen h2 {
+                font-size: 14px !important;
+            }
+            
+            #final-screen p {
+                font-size: 12px !important;
+            }
+            
+            /* Phase 3 mobile - minigolf */
+            .golf-scoreboard {
+                font-size: 8px !important;
+                padding: 6px 10px !important;
+            }
+
+            #golf-reaction {
+                font-size: 11px !important;
+                padding: 15px 20px !important;
+            }
+
+            .golf-instruction {
+                font-size: 9px !important;
+            }
+        }
+        
+        /* ===== INTRO / PASSWORD GATE ===== */
+        #intro-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a20 50%, #0a1020 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        #intro-canvas {
+            width: 480px;
+            height: 420px;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .intro-prompt {
+            font-family: 'Dancing Script', cursive;
+            font-size: 24px;
+            color: #ffd1dc;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .intro-input-wrap {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .intro-input {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            padding: 14px 24px;
+            background: rgba(255, 105, 180, 0.08);
+            border: 2px solid rgba(255, 105, 180, 0.4);
+            border-radius: 10px;
+            color: #ffd1dc;
+            text-align: center;
+            outline: none;
+            width: 260px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .intro-input:focus {
+            border-color: #ff69b4;
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+        }
+
+        .intro-input::placeholder {
+            color: rgba(255, 209, 220, 0.3);
+            font-size: 10px;
+        }
+
+        .intro-submit {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            padding: 14px 20px;
+            background: linear-gradient(180deg, #ff69b4 0%, #ff1493 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #c71585;
+            transition: all 0.1s;
+        }
+
+        .intro-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #c71585, 0 0 20px rgba(255, 105, 180, 0.4);
+        }
+
+        .intro-submit:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #c71585;
+        }
+
+        .intro-error {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 9px;
+            color: #ff4466;
+            margin-top: 12px;
+            height: 16px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .intro-error.visible {
+            opacity: 1;
+        }
+
+        .intro-input.shake {
+            animation: introShake 0.4s;
+            border-color: #ff4466;
+        }
+
+        @keyframes introShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+
+        /* Intro animation overlay */
+        #intro-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #vortex-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .time-text {
+            position: absolute;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 48px;
+            color: #fff;
+            text-shadow: 0 0 40px #ff69b4, 0 0 80px #ff1493;
+            opacity: 0;
+            z-index: 10001;
+            pointer-events: none;
+        }
+
+        .intro-flash {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: white;
+            z-index: 10002;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @media screen and (max-width: 850px) {
+            #intro-canvas {
+                width: 320px;
+                height: 280px;
+            }
+
+            .intro-prompt {
+                font-size: 18px;
+            }
+
+            .intro-input {
+                font-size: 11px;
+                padding: 12px 16px;
+                width: 200px;
+            }
+
+            .intro-submit {
+                font-size: 8px;
+                padding: 12px 14px;
+            }
+
+            .time-text {
+                font-size: 32px;
+            }
+        }
+
+        /* Prevent pull-to-refresh and bounce on iOS */
+        html, body {
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+</head>
+<body>
+    <!-- Intro: Password Gate -->
+    <div id="intro-screen">
+        <canvas id="intro-canvas" width="160" height="140"></canvas>
+        <p class="intro-prompt">Voer de geheime code in...</p>
+        <div class="intro-input-wrap">
+            <input type="password" class="intro-input" id="intro-password" placeholder="* * * * *" autocomplete="off" autofocus>
+            <button class="intro-submit" onclick="checkIntroPassword()">GO</button>
+        </div>
+        <p class="intro-error" id="intro-error">Verkeerde code... probeer opnieuw</p>
+    </div>
+
+    <!-- Intro: Time Travel Animation -->
+    <div id="intro-animation">
+        <canvas id="vortex-canvas"></canvas>
+    </div>
+    <div class="intro-flash" id="intro-flash"></div>
+
+    <div id="game-container" style="display:none">
+        <canvas id="bg-canvas"></canvas>
+        
+        <div id="sound-toggle">🔊</div>
+        
+        <!-- Title Screen -->
+        <div id="title-screen">
+            <h1 class="arcade-title">💕 LINDSAY'S LOVE QUEST 💕</h1>
+            <p class="subtitle">Juli 2025 - Down The Rabbit Hole</p>
+            <div style="flex-grow: 0.4;"></div>
+            <div class="character-display">
+                <span class="char">👸🏻</span>
+                <span class="char">💖</span>
+                <span class="char">🤴🏻</span>
+            </div>
+            <p style="color: #ffd1dc; font-size: 26px; font-family: 'Dancing Script', cursive; margin-bottom: 15px;">Jouw missie: herleef de zomer en regel Duco!</p>
+            <button class="start-btn" onclick="startGame()">💝 START SPEL 💝</button>
+            <p class="instructions">Druk op een toets om te beginnen</p>
+        </div>
+        
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div class="hud-section">
+                <div>PUNTEN</div>
+                <div style="font-size: 14px; color: #ffd700; margin-top: 4px;"><span id="score">0</span></div>
+            </div>
+            <div class="hud-section" style="text-align: center;">
+                <div>💕 LIEFDES METER 💕</div>
+                <div class="love-meter">
+                    <div class="love-meter-fill" id="love-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="hud-section">
+                <div>FASE</div>
+                <div style="font-size: 14px; color: #ff69b4; margin-top: 4px;"><span id="phase-num">1</span> / 3</div>
+            </div>
+        </div>
+        
+        <!-- Phase 1: Heart Catcher -->
+        <div id="phase1">
+            <div id="catcher">🧺</div>
+        </div>
+        
+        <!-- Phase 2: Love Letter -->
+        <div id="phase2">
+            <div class="letter-box">
+                <div class="words-counter">Woord <span id="word-num">1</span></div>
+                <h2>✨ TYP DE FLIRTERIGE WOORDEN! ✨</h2>
+                <div class="word-display" id="word-display"></div>
+                <input type="text" id="type-input" placeholder="Typ hier..." autocomplete="off">
+                <div class="timer-bar">
+                    <div class="timer-fill" id="timer-fill"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Phase 3: Minigolf -->
+        <div id="phase3">
+            <canvas id="golf-canvas" width="800" height="600"></canvas>
+            <div class="golf-scoreboard">🌺 Lindsay: <span id="golf-lindsay-score">0</span> | Duco: <span id="golf-duco-score">0</span> 🌴</div>
+            <div id="golf-reaction"></div>
+            <div class="golf-instruction">🌺 Tik waar je de bal heen wilt! 🌺</div>
+        </div>
+        
+        <!-- Grand Finale -->
+        <div id="finale">
+            <div class="finale-message">
+                <h1>🎉 JE HEBT HET GEHAALD! 🎉</h1>
+                <div class="love-letter">
+                    <div class="line">Lindsay, je bent echt geweldig! ✨</div>
+                    <div class="line">Elk moment met jou is een cadeautje 🎁</div>
+                    <div class="line">Je maakt mijn wereld elke dag mooier 🌟</div>
+                    <div class="line">Ik hou meer van je dan woorden kunnen zeggen 💕</div>
+                    <div class="line">Fijne Valentijnsdag, mijn liefde! 💝</div>
+                </div>
+                <div class="finale-heart">💖</div>
+                <div class="final-score">EINDSCORE: <span id="final-score">0</span></div>
+                <button class="replay-btn" onclick="location.reload()">💕 OPNIEUW SPELEN 💕</button>
+            </div>
+        </div>
+        
+        <!-- Kiss Transition -->
+        <div id="kiss-transition">
+            <canvas id="kiss-canvas" width="120" height="120"></canvas>
+            <p class="kiss-label">Down The Rabbit Hole 💕</p>
+            <p class="kiss-sublabel">De eerste zoen!</p>
+        </div>
+
+        <!-- Date Transition -->
+        <div id="date-transition">
+            <canvas id="date-canvas" width="120" height="120"></canvas>
+            <p class="kiss-label">Minigolf date staat gepland! 🏌️</p>
+            <p class="kiss-sublabel">Vlinders in de nacht...</p>
+        </div>
+
+        <!-- Phase Announcement -->
+        <div id="phase-announce" class="phase-announcement hidden">
+            <h2 id="announce-title">FASE 1</h2>
+            <div class="phase-icon" id="announce-icon">💕</div>
+            <p id="announce-desc">Vang de hartjes!</p>
+        </div>
+    </div>
+
+    <script>
+        // ============ INTRO: PASSWORD GATE + TIME TRAVEL ============
+        // SHA-256 hash of the password (placeholder - update later)
+        const PASSWORD_HASH = '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08'; // "test"
+
+        let introActive = true;
+
+        async function sha256(str) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function drawIntroScene(frame) {
+            const canvas = document.getElementById('intro-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 160;
+            canvas.height = 140;
+
+            const f = frame || 0;
+            const p = (x, y, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, 1, 1); };
+            const r = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+            const ellipse = (cx, cy, rx, ry, c) => {
+                ctx.fillStyle = c;
+                for (let dy = -ry; dy <= ry; dy++) {
+                    for (let dx = -rx; dx <= rx; dx++) {
+                        if ((dx*dx)/(rx*rx) + (dy*dy)/(ry*ry) <= 1) ctx.fillRect(cx+dx, cy+dy, 1, 1);
+                    }
+                }
+            };
+
+            // === ROOM BACKGROUND ===
+            r(0, 0, 160, 140, '#0e0818');
+            r(0, 120, 160, 20, '#1a1225');
+
+            // === WINDOW (left) ===
+            r(6, 6, 28, 22, '#2a2240');
+            r(7, 7, 26, 20, '#060620');
+            r(20, 7, 1, 20, '#2a2240'); r(7, 17, 26, 1, '#2a2240');
+            for (let dy = -4; dy <= 4; dy++) {
+                for (let dx = -4; dx <= 4; dx++) {
+                    if (dx*dx + dy*dy <= 16) p(28+dx, 13+dy, '#FFFDE0');
+                }
+            }
+            for (let dy = -4; dy <= 4; dy++) {
+                for (let dx = -4; dx <= 4; dx++) {
+                    if ((dx-2)*(dx-2) + dy*dy <= 10) p(28+dx, 13+dy, '#060620');
+                }
+            }
+            [[9,10],[14,14],[11,23],[24,9],[17,8],[8,18],[30,12],[22,22]].forEach(([sx,sy], i) => {
+                p(sx, sy, (f + i * 4) % 10 < 7 ? '#ffe' : '#88aacc');
+            });
+
+            // === FAIRY LIGHTS ===
+            ['#ff69b4','#ffd700','#00e5ff','#ff69b4','#ffd700','#00e5ff','#ff69b4','#ffd700','#ff69b4','#ffd700'].forEach((c, i) => {
+                const fx = 5 + i * 15, fy = 36 + Math.round(Math.sin(i * 0.9) * 2);
+                if (fx < 155) {
+                    p(fx, fy, (f + i * 3) % 8 < 6 ? c : '#222');
+                    if (i < 9) p(Math.round((fx + 5 + (i+1)*15)/2), fy + 1, '#333');
+                }
+            });
+
+            // === BOOKSHELF (right wall) ===
+            r(130, 8, 24, 2, '#4a3a2a');
+            r(132, 2, 4, 6, '#c44'); r(137, 3, 3, 5, '#4a4'); r(141, 1, 4, 7, '#44c'); r(146, 2, 4, 6, '#cc4');
+            r(130, 24, 24, 2, '#4a3a2a');
+            r(132, 18, 5, 6, '#c66'); r(138, 19, 4, 5, '#6a6'); r(143, 17, 4, 7, '#66c');
+
+            // === "Dit ben jij" ARROW (drawn early so Lindsay overlaps it) ===
+            ctx.save();
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 1;
+            // Text positioned safely inside canvas
+            ctx.font = '5px "Press Start 2P", monospace';
+            ctx.fillStyle = '#ffd700';
+            ctx.textAlign = 'right';
+            ctx.fillText('Dit ben', 155, 38);
+            ctx.fillText('jij!', 146, 46);
+            // Arrow line curving down to Lindsay's head
+            ctx.beginPath();
+            ctx.moveTo(135, 48);
+            ctx.lineTo(108, 58);
+            ctx.stroke();
+            // Arrowhead
+            ctx.beginPath();
+            ctx.moveTo(108, 58);
+            ctx.lineTo(112, 54);
+            ctx.moveTo(108, 58);
+            ctx.lineTo(113, 59);
+            ctx.stroke();
+            ctx.restore();
+
+            // === DESK ===
+            r(5, 100, 150, 5, '#5a4030');
+            r(5, 105, 5, 14, '#4a3020');
+            r(150, 105, 5, 14, '#4a3020');
+            r(7, 105, 146, 1, '#6a5040');
+
+            // === LAPTOP on desk ===
+            const sx = 12, sy = 62;
+            r(sx, sy, 44, 34, '#333');
+            r(sx+1, sy+1, 42, 32, '#222');
+            // Screen content - matches the ACTUAL intro screen the player sees
+            r(sx+2, sy+2, 40, 30, '#0e0818');  // same dark bg as intro
+            // Tiny pixel Lindsay on screen (recursive!)
+            ellipse(sx+21, sy+10, 2, 2, '#FFDAB9'); // tiny head
+            r(sx+20, sy+8, 3, 2, '#3A1C07'); // tiny hair
+            r(sx+19, sy+13, 5, 3, '#cc3366'); // tiny body
+            // "Voer de code in..." prompt (tiny pink text line)
+            r(sx+10, sy+18, 22, 1, '#ff69b4');
+            r(sx+12, sy+19, 18, 1, '#cc5588');
+            // Password input field (matches .intro-input style)
+            r(sx+8, sy+22, 26, 4, '#1a1a2e');
+            r(sx+9, sy+23, 24, 2, '#2a2a3e');
+            // Blinking cursor in password field
+            if (f % 12 < 7) r(sx+15, sy+23, 1, 2, '#ff69b4');
+            // Tiny stars/dots for password
+            if (f % 20 > 5) { p(sx+11, sy+24, '#ff69b4'); p(sx+13, sy+24, '#ff69b4'); }
+            // GO button
+            r(sx+16, sy+27, 10, 3, '#ff1493');
+            r(sx+17, sy+28, 8, 1, '#ff69b4');
+            // Screen glow effect
+            ctx.globalAlpha = 0.05;
+            for (let gy = sy; gy > sy - 8; gy--) {
+                r(sx - (sy - gy), gy, 44 + (sy - gy) * 2, 1, '#6688ff');
+            }
+            ctx.globalAlpha = 1.0;
+            // Laptop base/keyboard
+            r(sx-2, 100, 48, 3, '#444');
+            r(sx-1, 100, 46, 1, '#555');
+            for (let kx = sx+2; kx < sx+42; kx += 3) p(kx, 101, '#333');
+
+            // === MUG on desk ===
+            r(62, 92, 8, 8, '#8B4513');
+            r(63, 93, 6, 6, '#aa6633');
+            r(70, 94, 3, 3, '#8B4513');
+            [[63,89],[65,88],[67,90]].forEach(([mx,my], i) => {
+                const so = Math.round(Math.sin((f + i * 5) * 0.2));
+                ctx.globalAlpha = 0.3; p(mx + so, my - (f % 4), '#aaa'); ctx.globalAlpha = 1.0;
+            });
+
+            // === PLANT ===
+            r(142, 92, 8, 8, '#6B4226');
+            r(143, 86, 6, 6, '#228833');
+            r(142, 84, 3, 4, '#2a9a3a');
+            r(147, 85, 3, 3, '#2a9a3a');
+            p(145, 83, '#1a7a2a');
+
+            // === CHAIR (moved down) ===
+            r(110, 62, 5, 40, '#4a3a5a');  // back
+            r(111, 63, 3, 38, '#3a2a4a');
+            r(80, 96, 36, 4, '#4a3a5a');   // seat
+            r(82, 100, 4, 18, '#3a2a4a');  // legs
+            r(110, 100, 4, 18, '#3a2a4a');
+
+            // === LINDSAY (moved down, more beautiful) ===
+            const lx = 84, ly = 50;
+
+            // === HAIR BEHIND (long, flowing down back) ===
+            r(lx+8, ly-2, 12, 4, '#3A1C07');
+            r(lx+10, ly+2, 12, 8, '#3A1C07');
+            r(lx+12, ly+10, 10, 16, '#3A1C07');
+            r(lx+13, ly+26, 8, 12, '#3A1C07');
+            r(lx+14, ly+38, 6, 6, '#3A1C07');
+            // Hair highlights
+            p(lx+14, ly+5, '#5A3C17'); p(lx+16, ly+12, '#5A3C17');
+            p(lx+15, ly+20, '#5A3C17'); p(lx+18, ly+8, '#5A3C17');
+
+            // === HEAD (3/4 view, simple clean pixel art) ===
+            // Hair top
+            r(lx+2, ly, 14, 3, '#3A1C07');
+            r(lx+1, ly+3, 16, 3, '#3A1C07');
+            p(lx+4, ly+1, '#5A3C17'); p(lx+10, ly+1, '#5A3C17');
+            p(lx+6, ly+2, '#4A2C07'); p(lx+12, ly+2, '#4A2C07');
+            // Face
+            r(lx+2, ly+6, 14, 12, '#FFDAB9');
+            r(lx+3, ly+7, 12, 10, '#FFE4C4');
+            // Eyes (looking left toward screen)
+            r(lx+4, ly+9, 3, 3, '#fff'); p(lx+4, ly+10, '#3a6045'); p(lx+4, ly+11, '#222');
+            r(lx+10, ly+9, 3, 3, '#fff'); p(lx+10, ly+10, '#3a6045'); p(lx+10, ly+11, '#222');
+            // Eyelashes
+            p(lx+3, ly+9, '#3A1C07'); p(lx+7, ly+9, '#3A1C07');
+            p(lx+9, ly+9, '#3A1C07'); p(lx+13, ly+9, '#3A1C07');
+            // Eyebrows
+            r(lx+4, ly+8, 3, 1, '#3A1C07'); r(lx+10, ly+8, 3, 1, '#3A1C07');
+            // Nose
+            p(lx+8, ly+12, '#E8C8A8'); p(lx+9, ly+12, '#E8C8A8');
+            // Smile
+            r(lx+6, ly+15, 6, 1, '#D88');
+            p(lx+5, ly+14, '#D88'); p(lx+12, ly+14, '#D88');
+            // Blush
+            r(lx+3, ly+13, 2, 2, '#FFB0A0'); r(lx+13, ly+13, 2, 2, '#FFB0A0');
+
+            // Hair framing face
+            r(lx-1, ly+6, 3, 22, '#3A1C07');
+            r(lx+16, ly+6, 3, 22, '#3A1C07');
+
+            // Neck
+            r(lx+6, ly+18, 6, 3, '#FFDAB9');
+
+            // === BODY (fitted top showing figure) ===
+            // Shoulders (slim)
+            r(lx+1, ly+23, 14, 3, '#cc3366');
+            r(lx+2, ly+23, 12, 1, '#dd4477');  // highlight
+            // Chest area
+            r(lx+1, ly+26, 14, 6, '#cc3366');
+            ellipse(lx+5, ly+28, 3, 2, '#dd4477');   // shape left
+            ellipse(lx+11, ly+28, 3, 2, '#dd4477');  // shape right
+            // Slim waist (very narrow!)
+            r(lx+4, ly+32, 8, 3, '#cc3366');
+            r(lx+5, ly+33, 6, 1, '#dd4477');
+            // Midriff showing (crop top)
+            r(lx+5, ly+35, 6, 2, '#FFDAB9');
+
+            // === HIPS & BUTT (wide, curvy, prominent) ===
+            // Hips flare out dramatically from tiny waist
+            r(lx+2, ly+37, 14, 3, '#1a1a3e');
+            r(lx, ly+40, 18, 3, '#1a1a3e');
+            r(lx-2, ly+43, 22, 4, '#1a1a3e');
+            // The booty! Big, round, extends back (right side)
+            ellipse(lx+16, ly+44, 7, 6, '#1a1a3e');  // right cheek (big!)
+            ellipse(lx+8, ly+45, 6, 5, '#1a1a3e');   // left cheek
+            // 3D shading on butt for roundness
+            ellipse(lx+17, ly+43, 5, 4, '#222255');   // highlight right
+            ellipse(lx+9, ly+44, 4, 3, '#222255');    // highlight left
+            p(lx+18, ly+42, '#2a2a60');                // top highlight
+            // Jeans details
+            p(lx+6, ly+39, '#2a2a5e'); p(lx+10, ly+41, '#2a2a5e');
+
+            // === THIGHS (thick, seated) ===
+            r(lx-3, ly+47, 12, 4, '#1a1a3e');
+            r(lx+10, ly+47, 12, 4, '#1a1a3e');
+            // Left thigh going forward toward desk
+            r(lx-5, ly+49, 10, 3, '#1a1a3e');
+            r(lx-7, ly+51, 8, 3, '#1a1a3e');
+            r(lx-9, ly+53, 6, 2, '#1a1a3e');
+            // Feet
+            r(lx-10, ly+54, 5, 2, '#444');
+            r(lx-10, ly+55, 6, 2, '#333');
+
+            // === ARMS ===
+            // Left arm reaching to laptop
+            r(lx-1, ly+24, 3, 7, '#cc3366');       // sleeve
+            r(lx-3, ly+31, 4, 5, '#FFDAB9');       // upper forearm
+            r(lx-5, ly+36, 4, 5, '#FFDAB9');       // lower forearm
+            r(lx-7, ly+41, 4, 3, '#FFDAB9');       // wrist
+            // Hand on keyboard (delicate fingers)
+            r(lx-9, ly+43, 5, 3, '#FFDAB9');
+            p(lx-10, ly+44, '#FFDAB9'); p(lx-5, ly+44, '#FFDAB9');
+            p(lx-8, ly+45, '#FFDAB9');
+            // Painted nails
+            p(lx-10, ly+44, '#ff1493'); p(lx-5, ly+44, '#ff1493');
+            p(lx-8, ly+45, '#ff1493');
+
+            // Right arm resting on lap
+            r(lx+13, ly+24, 3, 7, '#cc3366');
+            r(lx+14, ly+31, 3, 5, '#FFDAB9');
+            r(lx+14, ly+36, 3, 3, '#FFDAB9');
+
+            // === CARPET ===
+            r(3, 126, 154, 14, '#3a1a2a');
+            r(4, 127, 152, 12, '#4a2a3a');
+            for (let cx = 10; cx < 152; cx += 10) { p(cx, 131, '#5a3a4a'); p(cx+4, 133, '#5a3a4a'); }
+
+            // === FLOATING HEARTS ===
+            [[20,32,18],[120,42,22],[40,26,16],[55,20,24]].forEach(([hx,hy,period], i) => {
+                const ay = hy - (f % period);
+                if (ay > 3 && ay < 40) {
+                    p(hx, ay+1, '#ff69b4'); p(hx+1, ay, '#ff69b4'); p(hx+2, ay+1, '#ff69b4');
+                    p(hx+3, ay, '#ff69b4'); p(hx+4, ay+1, '#ff69b4');
+                    r(hx, ay+2, 5, 1, '#ff69b4');
+                    p(hx+1, ay+3, '#ff69b4'); p(hx+2, ay+3, '#ff69b4'); p(hx+3, ay+3, '#ff69b4');
+                    p(hx+2, ay+4, '#ff69b4');
+                }
+            });
+        }
+
+        async function checkIntroPassword() {
+            const input = document.getElementById('intro-password');
+            const error = document.getElementById('intro-error');
+            const hash = await sha256(input.value.trim().toLowerCase());
+
+            if (hash === PASSWORD_HASH) {
+                error.classList.remove('visible');
+                startIntroAnimation();
+            } else {
+                input.classList.add('shake');
+                error.classList.add('visible');
+                setTimeout(() => input.classList.remove('shake'), 400);
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        // Enter key submits password
+        document.addEventListener('DOMContentLoaded', () => {
+            const introInput = document.getElementById('intro-password');
+            if (introInput) {
+                introInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') checkIntroPassword();
+                });
+            }
+            // Draw initial intro scene
+            let introFrame = 0;
+            drawIntroScene(0);
+            setInterval(() => {
+                if (introActive) drawIntroScene(++introFrame);
+            }, 100);
+            // Try to start music immediately; if browser blocks autoplay, start on first interaction
+            startIntroMusic();
+            if (!introMusicInterval) {
+                function tryStartOnGesture() {
+                    startIntroMusic();
+                    if (introMusicInterval) {
+                        document.removeEventListener('click', tryStartOnGesture);
+                        document.removeEventListener('keydown', tryStartOnGesture);
+                        document.removeEventListener('touchstart', tryStartOnGesture);
+                    }
+                }
+                document.addEventListener('click', tryStartOnGesture);
+                document.addEventListener('keydown', tryStartOnGesture);
+                document.addEventListener('touchstart', tryStartOnGesture);
+            }
+        });
+
+        // Ominous up-tempo intro music
+        let introMusicNodes = [];
+        let introMusicInterval = null;
+        let introMusicBeat = 0;
+
+        function startIntroMusic() {
+            initAudio();
+            if (!audioCtx) return;
+            if (introMusicInterval) return; // already playing
+
+            const bpm = 140;
+            const beatMs = (60 / bpm) * 1000;
+            // Minor chords - mysterious but not too dark
+            const chordProg = [
+                [196, 233, 294, 392],  // G min
+                [220, 262, 330, 440],  // A min
+                [175, 220, 262, 349],  // F min
+                [196, 247, 294, 392],  // G sus
+            ];
+            let chordIdx = 0;
+
+            function playBeat() {
+                if (!introActive) return;
+                const now = audioCtx.currentTime;
+                const chord = chordProg[chordIdx];
+                const beat = introMusicBeat % 8;
+
+                // Dark pad (changes every 8 beats)
+                if (beat === 0) {
+                    chord.slice(0, 3).forEach(freq => {
+                        const osc = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now);
+                        // Low-pass filter for dark tone
+                        const flt = audioCtx.createBiquadFilter();
+                        flt.type = 'lowpass';
+                        flt.frequency.setValueAtTime(900, now);
+                        g.gain.setValueAtTime(0, now);
+                        g.gain.linearRampToValueAtTime(0.018, now + 0.4);
+                        g.gain.setValueAtTime(0.018, now + 1.4);
+                        g.gain.linearRampToValueAtTime(0, now + 1.9);
+                        osc.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+                        osc.start(now); osc.stop(now + 2.0);
+                        introMusicNodes.push(osc);
+                    });
+                    chordIdx = (chordIdx + 1) % chordProg.length;
+                }
+
+                // Descending arpeggio - creepy, goes down instead of up
+                const arpIdx = [3, 2, 1, 0, 3, 2, 1, 0][beat];
+                const arpOctave = beat < 4 ? 2 : 1;
+                const arpNote = chord[arpIdx] * arpOctave;
+                const arpOsc = audioCtx.createOscillator();
+                const arpG = audioCtx.createGain();
+                arpOsc.type = 'triangle';
+                arpOsc.frequency.setValueAtTime(arpNote, now);
+                arpG.gain.setValueAtTime(0.035, now);
+                arpG.gain.linearRampToValueAtTime(0, now + 0.28);
+                arpOsc.connect(arpG); arpG.connect(audioCtx.destination);
+                arpOsc.start(now); arpOsc.stop(now + 0.3);
+                introMusicNodes.push(arpOsc);
+
+                // Soft pulsing bass - mysterious but lighter
+                const bassOsc = audioCtx.createOscillator();
+                const bassG = audioCtx.createGain();
+                bassOsc.type = 'sine';
+                bassOsc.frequency.setValueAtTime(chord[0] / 2, now);
+                bassG.gain.setValueAtTime(0.03, now);
+                bassG.gain.linearRampToValueAtTime(0, now + 0.15);
+                bassOsc.connect(bassG); bassG.connect(audioCtx.destination);
+                bassOsc.start(now); bassOsc.stop(now + 0.2);
+                introMusicNodes.push(bassOsc);
+
+                // Kick on downbeats
+                if (beat === 0 || beat === 4) {
+                    const kick = audioCtx.createOscillator();
+                    const kG = audioCtx.createGain();
+                    kick.type = 'sine';
+                    kick.frequency.setValueAtTime(160, now);
+                    kick.frequency.exponentialRampToValueAtTime(35, now + 0.15);
+                    kG.gain.setValueAtTime(0.07, now);
+                    kG.gain.linearRampToValueAtTime(0, now + 0.2);
+                    kick.connect(kG); kG.connect(audioCtx.destination);
+                    kick.start(now); kick.stop(now + 0.25);
+                    introMusicNodes.push(kick);
+                }
+
+                // Ticking hi-hat - faster, clocklike
+                const hatBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.03, audioCtx.sampleRate);
+                const hatData = hatBuf.getChannelData(0);
+                for (let i = 0; i < hatData.length; i++) hatData[i] = (Math.random() * 2 - 1);
+                const hat = audioCtx.createBufferSource();
+                const hatG = audioCtx.createGain();
+                const hatFlt = audioCtx.createBiquadFilter();
+                hatFlt.type = 'highpass';
+                hatFlt.frequency.setValueAtTime(8000, now);
+                hat.buffer = hatBuf;
+                hatG.gain.setValueAtTime(beat % 2 === 0 ? 0.018 : 0.010, now);
+                hatG.gain.linearRampToValueAtTime(0, now + 0.025);
+                hat.connect(hatFlt); hatFlt.connect(hatG); hatG.connect(audioCtx.destination);
+                hat.start(now);
+                introMusicNodes.push(hat);
+
+                // Subtle shimmer every 16 beats - something is coming
+                if (introMusicBeat % 16 === 0) {
+                    const shimmer = audioCtx.createOscillator();
+                    const sG = audioCtx.createGain();
+                    shimmer.type = 'sine';
+                    shimmer.frequency.setValueAtTime(1175, now); // D5
+                    shimmer.frequency.linearRampToValueAtTime(1108, now + 1.2);
+                    sG.gain.setValueAtTime(0, now);
+                    sG.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    sG.gain.linearRampToValueAtTime(0, now + 1.2);
+                    shimmer.connect(sG); sG.connect(audioCtx.destination);
+                    shimmer.start(now); shimmer.stop(now + 1.3);
+                    introMusicNodes.push(shimmer);
+                }
+
+                introMusicBeat++;
+            }
+            playBeat();
+            introMusicInterval = setInterval(playBeat, beatMs);
+        }
+
+        function stopIntroMusic() {
+            if (introMusicInterval) { clearInterval(introMusicInterval); introMusicInterval = null; }
+            introMusicNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+            introMusicNodes = [];
+        }
+
+        function playTimeTravelSFX() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            // Rising sweep
+            const sweep = audioCtx.createOscillator();
+            const sweepGain = audioCtx.createGain();
+            sweep.type = 'sawtooth';
+            sweep.frequency.setValueAtTime(80, now);
+            sweep.frequency.exponentialRampToValueAtTime(2000, now + 4);
+            sweepGain.gain.setValueAtTime(0.04, now);
+            sweepGain.gain.linearRampToValueAtTime(0.08, now + 2);
+            sweepGain.gain.linearRampToValueAtTime(0, now + 4.5);
+            sweep.connect(sweepGain);
+            sweepGain.connect(audioCtx.destination);
+            sweep.start(now);
+            sweep.stop(now + 4.5);
+
+            // Whoosh noise
+            const bufSize = audioCtx.sampleRate * 5;
+            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1);
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buf;
+            const noiseGain = audioCtx.createGain();
+            const noiseFilter = audioCtx.createBiquadFilter();
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.setValueAtTime(200, now);
+            noiseFilter.frequency.exponentialRampToValueAtTime(4000, now + 4);
+            noiseFilter.Q.value = 2;
+            noiseGain.gain.setValueAtTime(0, now);
+            noiseGain.gain.linearRampToValueAtTime(0.06, now + 1.5);
+            noiseGain.gain.linearRampToValueAtTime(0, now + 4.5);
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(audioCtx.destination);
+            noise.start(now);
+            noise.stop(now + 4.5);
+
+            // Clock ticking (accelerating)
+            for (let i = 0; i < 20; i++) {
+                const t = now + 0.2 + i * (0.25 - i * 0.01);
+                if (t > now + 4.2) break;
+                const tick = audioCtx.createOscillator();
+                const tGain = audioCtx.createGain();
+                tick.type = 'square';
+                tick.frequency.setValueAtTime(800 + i * 50, t);
+                tGain.gain.setValueAtTime(0.03, t);
+                tGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+                tick.connect(tGain);
+                tGain.connect(audioCtx.destination);
+                tick.start(t);
+                tick.stop(t + 0.05);
+            }
+        }
+
+        function startIntroAnimation() {
+            introActive = false;
+            stopIntroMusic();
+            initAudio();
+
+            const introScreen = document.getElementById('intro-screen');
+            const animDiv = document.getElementById('intro-animation');
+            const vortexCanvas = document.getElementById('vortex-canvas');
+            const flash = document.getElementById('intro-flash');
+
+            // Phase 1: Glow the laptop screen on the intro canvas (0.8s)
+            const introCanvas = document.getElementById('intro-canvas');
+            introCanvas.style.transition = 'filter 0.8s, transform 1.5s';
+            introCanvas.style.transformOrigin = '21% 57%'; // center of laptop screen
+            introCanvas.style.filter = 'brightness(1.5)';
+
+            // Play "code accepted" sound
+            if (audioCtx) {
+                const now = audioCtx.currentTime;
+                [523, 659, 784].forEach((freq, i) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(freq, now + i * 0.12);
+                    g.gain.setValueAtTime(0.08, now + i * 0.12);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.start(now + i * 0.12);
+                    o.stop(now + i * 0.12 + 0.4);
+                });
+            }
+
+            setTimeout(() => {
+                // Phase 2: Zoom into laptop screen (1.2s)
+                introCanvas.style.transform = 'scale(8)';
+                introCanvas.style.filter = 'brightness(3)';
+                introScreen.style.transition = 'opacity 0.5s';
+            }, 800);
+
+            setTimeout(() => {
+                // Phase 3: Switch to vortex animation
+                introScreen.style.opacity = '0';
+                animDiv.style.display = 'flex';
+                playTimeTravelSFX();
+
+                vortexCanvas.width = window.innerWidth;
+                vortexCanvas.height = window.innerHeight;
+                const vCtx = vortexCanvas.getContext('2d');
+
+                let vFrame = 0;
+                const totalFrames = 270; // ~4.5 seconds at 60fps
+                const months = ['Feb 2026', 'Jan 2026', 'Dec 2025', 'Nov 2025', 'Oct 2025', 'Sep 2025', 'Aug 2025', 'Jul 2025'];
+                const monthEls = [];
+
+                months.forEach((m) => {
+                    const el = document.createElement('div');
+                    el.className = 'time-text';
+                    el.textContent = m;
+                    el.style.left = '50%';
+                    el.style.top = '50%';
+                    el.style.transform = 'translate(-50%, -50%)';
+                    animDiv.appendChild(el);
+                    monthEls.push(el);
+                });
+
+                function renderVortex() {
+                    if (vFrame >= totalFrames) {
+                        // Phase 4: Flash and reveal game
+                        flash.style.transition = 'opacity 0.15s';
+                        flash.style.opacity = '1';
+
+                        setTimeout(() => {
+                            animDiv.style.display = 'none';
+                            introScreen.style.display = 'none';
+                            monthEls.forEach(el => el.remove());
+
+                            document.getElementById('game-container').style.display = '';
+                            // Start bg music immediately so it's playing on title screen
+                            startBgMusic();
+                            flash.style.transition = 'opacity 0.8s';
+                            flash.style.opacity = '0';
+                        }, 200);
+                        return;
+                    }
+
+                    const w = vortexCanvas.width;
+                    const h = vortexCanvas.height;
+                    const cx = w / 2;
+                    const cy = h / 2;
+                    const progress = vFrame / totalFrames;
+
+                    vCtx.fillStyle = `rgba(0, 0, 0, ${0.15 + progress * 0.05})`;
+                    vCtx.fillRect(0, 0, w, h);
+
+                    // Spiral tunnel rings
+                    for (let i = 0; i < 12; i++) {
+                        const ringProgress = ((vFrame * 0.02 + i / 12) % 1);
+                        const radius = ringProgress * Math.max(w, h) * 0.8;
+                        const alpha = (1 - ringProgress) * 0.6;
+                        const hue = 240 + progress * 80 + i * 15;
+                        vCtx.beginPath();
+                        vCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+                        vCtx.strokeStyle = `hsla(${hue}, 80%, 60%, ${alpha})`;
+                        vCtx.lineWidth = 2 + (1 - ringProgress) * 4;
+                        vCtx.stroke();
+                    }
+
+                    // Spiral particles
+                    for (let i = 0; i < 20; i++) {
+                        const angle = vFrame * 0.05 + i * 0.31;
+                        const dist = (((vFrame * 2 + i * 30) % 400) / 400) * Math.max(w, h) * 0.5;
+                        const px = cx + Math.cos(angle) * dist;
+                        const py = cy + Math.sin(angle) * dist;
+                        const pAlpha = Math.max(0, 1 - dist / (Math.max(w, h) * 0.5));
+                        vCtx.beginPath();
+                        vCtx.arc(px, py, 1 + pAlpha * 3, 0, Math.PI * 2);
+                        vCtx.fillStyle = `hsla(${300 + progress * 60}, 100%, 70%, ${pAlpha * 0.8})`;
+                        vCtx.fill();
+                    }
+
+                    // Radial speed lines
+                    if (progress > 0.3) {
+                        const lineAlpha = (progress - 0.3) * 0.4;
+                        for (let i = 0; i < 24; i++) {
+                            const a = (Math.PI * 2 / 24) * i + vFrame * 0.01;
+                            vCtx.beginPath();
+                            vCtx.moveTo(cx + Math.cos(a) * (20 + Math.sin(vFrame * 0.1 + i) * 10), cy + Math.sin(a) * (20 + Math.sin(vFrame * 0.1 + i) * 10));
+                            vCtx.lineTo(cx + Math.cos(a) * Math.max(w, h), cy + Math.sin(a) * Math.max(w, h));
+                            vCtx.strokeStyle = `rgba(255, 105, 180, ${lineAlpha * 0.15})`;
+                            vCtx.lineWidth = 1;
+                            vCtx.stroke();
+                        }
+                    }
+
+                    // Central glow
+                    const centerGlow = vCtx.createRadialGradient(cx, cy, 0, cx, cy, 80 + progress * 40);
+                    centerGlow.addColorStop(0, `rgba(255, 105, 180, ${0.2 + progress * 0.3})`);
+                    centerGlow.addColorStop(1, 'rgba(255, 105, 180, 0)');
+                    vCtx.fillStyle = centerGlow;
+                    vCtx.fillRect(0, 0, w, h);
+
+                    // Month text display
+                    const monthInterval = totalFrames / months.length;
+                    const currentIdx = Math.floor(vFrame / monthInterval);
+                    const localProgress = (vFrame % monthInterval) / monthInterval;
+
+                    monthEls.forEach((el, i) => {
+                        if (i === currentIdx) {
+                            const scale = 0.5 + localProgress * 2;
+                            const alpha = localProgress < 0.15
+                                ? localProgress / 0.15
+                                : localProgress > 0.65
+                                    ? (1 - localProgress) / 0.35
+                                    : 1;
+                            el.style.opacity = alpha;
+                            el.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                            // Last month (Jul 2025) stays bigger and bolder
+                            if (i === months.length - 1 && localProgress > 0.5) {
+                                el.style.color = '#ff69b4';
+                                el.style.fontSize = '56px';
+                            }
+                        } else {
+                            el.style.opacity = '0';
+                        }
+                    });
+
+                    // Clock hands spinning
+                    if (progress > 0.1 && progress < 0.9) {
+                        const clockAlpha = Math.min((progress - 0.1) * 2, 1) * (progress < 0.8 ? 1 : (0.9 - progress) * 10) * 0.2;
+                        const clockR = 40;
+                        const hAngle = -vFrame * 0.08;
+                        vCtx.beginPath(); vCtx.moveTo(cx, cy);
+                        vCtx.lineTo(cx + Math.cos(hAngle) * clockR * 0.6, cy + Math.sin(hAngle) * clockR * 0.6);
+                        vCtx.strokeStyle = `rgba(255, 215, 0, ${clockAlpha})`; vCtx.lineWidth = 3; vCtx.stroke();
+                        const mAngle = -vFrame * 0.5;
+                        vCtx.beginPath(); vCtx.moveTo(cx, cy);
+                        vCtx.lineTo(cx + Math.cos(mAngle) * clockR, cy + Math.sin(mAngle) * clockR);
+                        vCtx.strokeStyle = `rgba(255, 215, 0, ${clockAlpha * 0.7})`; vCtx.lineWidth = 2; vCtx.stroke();
+                        vCtx.beginPath(); vCtx.arc(cx, cy, clockR, 0, Math.PI * 2);
+                        vCtx.strokeStyle = `rgba(255, 215, 0, ${clockAlpha * 0.3})`; vCtx.lineWidth = 1; vCtx.stroke();
+                    }
+
+                    // Final bright convergence
+                    if (progress > 0.85) {
+                        const brightP = (progress - 0.85) / 0.15;
+                        vCtx.fillStyle = `rgba(255, 255, 255, ${brightP * 0.5})`;
+                        vCtx.fillRect(0, 0, w, h);
+                    }
+
+                    vFrame++;
+                    requestAnimationFrame(renderVortex);
+                }
+
+                renderVortex();
+            }, 2300);
+        }
+
+        // Audio context for sound effects
+        let audioCtx;
+        let soundEnabled = true;
+        let audioUnlocked = false;
+
+        // iOS Safari Fix: Create AudioContext on first user gesture and unlock with silent buffer
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            // Resume and play a silent buffer to fully prime iOS audio pipeline
+            if (audioCtx.state === 'suspended' || audioCtx.state === 'interrupted') {
+                audioCtx.resume().then(() => {
+                    // Play a silent buffer to warm up iOS audio
+                    const silentBuffer = audioCtx.createBuffer(1, 1, 22050);
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = silentBuffer;
+                    source.connect(audioCtx.destination);
+                    source.start(0);
+                    audioUnlocked = true;
+                }).catch(() => {});
+            }
+        }
+
+        // Unlock audio context on user gesture (iOS Safari requirement)
+        function setupAudioUnlockListeners() {
+            const events = ['touchend', 'mousedown', 'keydown', 'click'];
+            const unlock = function() {
+                initAudio();
+                if (audioCtx && audioCtx.state === 'running') {
+                    audioUnlocked = true;
+                    events.forEach(e => document.body.removeEventListener(e, unlock, true));
+                }
+            };
+
+            events.forEach(e => document.body.addEventListener(e, unlock, true));
+        }
+
+        // Re-unlock audio and restart music when returning from background/tab switch
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // Tab hidden: stop all music to prevent queued events
+                if (introActive && introMusicInterval) {
+                    stopIntroMusic();
+                    introMusicInterval = -1; // flag: was playing
+                }
+                if (musicPlaying) {
+                    stopBgMusic();
+                    musicPlaying = true; // remember it was playing
+                }
+            } else if (audioCtx) {
+                if (audioCtx.state === 'suspended' || audioCtx.state === 'interrupted') {
+                    audioCtx.resume().catch(() => {});
+                }
+                // Restart whichever music was playing
+                if (introActive && introMusicInterval === -1) {
+                    introMusicInterval = null;
+                    introMusicBeat = 0;
+                    startIntroMusic();
+                }
+                if (musicPlaying) {
+                    stopBgMusic();
+                    musicPlaying = true;
+                    startBgMusic();
+                }
+            }
+        });
+        
+        function playSound(type) {
+            if (!soundEnabled) return;
+
+            // Create audio context if it doesn't exist
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            // If context is suspended/interrupted, resume and play after it's ready
+            if (audioCtx.state === 'suspended' || audioCtx.state === 'interrupted') {
+                audioCtx.resume().then(() => {
+                    if (audioCtx.state === 'running') {
+                        _doPlaySound(type);
+                    }
+                }).catch(() => {});
+                return;
+            }
+
+            if (audioCtx.state !== 'running') return;
+            _doPlaySound(type);
+        }
+
+        function _doPlaySound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+            
+            switch(type) {
+                case 'catch':
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(900, now + 0.1);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+                case 'bonus':
+                    osc.frequency.setValueAtTime(523, now);
+                    osc.frequency.setValueAtTime(659, now + 0.1);
+                    osc.frequency.setValueAtTime(784, now + 0.2);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                    break;
+                case 'bad':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                    break;
+                case 'type':
+                    osc.frequency.setValueAtTime(800 + Math.random() * 200, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                    break;
+                case 'word':
+                    [523, 659, 784, 1047].forEach((freq, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0.1, now + i * 0.08);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.1);
+                        o.start(now + i * 0.08);
+                        o.stop(now + i * 0.08 + 0.15);
+                    });
+                    break;
+                case 'hit':
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                    break;
+                case 'miss':
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+                case 'phase':
+                    [392, 523, 659, 784].forEach((freq, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0.12, now + i * 0.15);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.2);
+                        o.start(now + i * 0.15);
+                        o.stop(now + i * 0.15 + 0.25);
+                    });
+                    break;
+                case 'finale':
+                    [262, 330, 392, 523, 659, 784, 1047].forEach((freq, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'sine';
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0.15, now + i * 0.12);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.4);
+                        o.start(now + i * 0.12);
+                        o.stop(now + i * 0.12 + 0.5);
+                    });
+                    break;
+            }
+        }
+        
+        // Sound toggle
+        document.getElementById('sound-toggle').addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-toggle').textContent = soundEnabled ? '🔊' : '🔇';
+
+            // Initialize and unlock audio when enabling sound (iOS Safari fix)
+            if (soundEnabled) {
+                initAudio();
+                if (musicPlaying) startBgMusic();
+            } else {
+                stopBgMusic();
+            }
+        });
+
+        // ============ BACKGROUND MUSIC SYSTEM ============
+        let musicPlaying = false;
+        let musicNodes = [];
+        let musicInterval = null;
+
+        function startBgMusic() {
+            if (!soundEnabled || !audioCtx) return;
+            stopBgMusic();
+            musicPlaying = true;
+
+            const BPM = 150;
+            const beat = 60 / BPM;
+            const bar = beat * 4;
+
+            // Upbeat romantic progression: I - V - vi - IV in C major
+            const chords = [
+                [261.6, 329.6, 392.0],   // C major
+                [392.0, 493.9, 587.3],   // G major
+                [220.0, 261.6, 329.6],   // Am
+                [349.2, 440.0, 523.3],   // F major
+            ];
+
+            // Catchy melody (notes per bar, 8th note rhythm)
+            const melodyBars = [
+                [523.3, 587.3, 659.3, 587.3, 523.3, 659.3, 784.0, 659.3],  // C5 D5 E5 D5 C5 E5 G5 E5
+                [784.0, 880.0, 784.0, 659.3, 587.3, 523.3, 587.3, 659.3],  // G5 A5 G5 E5 D5 C5 D5 E5
+                [440.0, 523.3, 587.3, 659.3, 587.3, 523.3, 440.0, 523.3],  // A4 C5 D5 E5 D5 C5 A4 C5
+                [349.2, 440.0, 523.3, 659.3, 784.0, 659.3, 523.3, 440.0],  // F4 A4 C5 E5 G5 E5 C5 A4
+            ];
+
+            let barIndex = 0;
+            let loopStartTime = audioCtx.currentTime;
+
+            function scheduleBar() {
+                if (!soundEnabled || !audioCtx || audioCtx.state !== 'running') return;
+
+                const now = loopStartTime + barIndex * bar;
+                const chord = chords[barIndex % chords.length];
+                const melNotes = melodyBars[barIndex % melodyBars.length];
+                barIndex++;
+
+                // Bouncy staccato chords on each beat
+                for (let b = 0; b < 4; b++) {
+                    const t = now + b * beat;
+                    const vol = (b === 0) ? 0.06 : 0.04;
+                    chord.forEach(freq => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.value = freq;
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        gain.gain.setValueAtTime(vol, t);
+                        gain.gain.exponentialRampToValueAtTime(0.001, t + beat * 0.6);
+                        osc.start(t);
+                        osc.stop(t + beat * 0.7);
+                        musicNodes.push(osc);
+                    });
+                }
+
+                // Funky bass line (root note, octave bounce pattern)
+                const bassRoot = chord[0] / 2;
+                const bassPattern = [1, 1.5, 1, 2];
+                for (let b = 0; b < 4; b++) {
+                    const t = now + b * beat;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = bassRoot * bassPattern[b];
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    gain.gain.setValueAtTime(0.07, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + beat * 0.5);
+                    osc.start(t);
+                    osc.stop(t + beat * 0.6);
+                    musicNodes.push(osc);
+                }
+
+                // Peppy 8th-note melody
+                for (let n = 0; n < 8; n++) {
+                    const t = now + n * (beat / 2);
+                    const freq = melNotes[n];
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    gain.gain.setValueAtTime(0.05, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + beat * 0.4);
+                    osc.start(t);
+                    osc.stop(t + beat * 0.5);
+                    musicNodes.push(osc);
+                }
+
+                // Hi-hat style noise on off-beats for energy
+                for (let b = 0; b < 4; b++) {
+                    const t = now + b * beat + beat / 2;
+                    const bufferSize = audioCtx.sampleRate * 0.05;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+                    const gain = audioCtx.createGain();
+                    noise.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    gain.gain.setValueAtTime(0.03, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+                    noise.start(t);
+                    noise.stop(t + 0.06);
+                    musicNodes.push(noise);
+                }
+            }
+
+            // Schedule a few bars ahead and keep scheduling
+            function scheduler() {
+                if (!musicPlaying) return;
+                const lookAhead = audioCtx.currentTime + 2;
+                while (loopStartTime + barIndex * bar < lookAhead) {
+                    scheduleBar();
+                }
+                musicInterval = setTimeout(scheduler, 200);
+            }
+            scheduler();
+        }
+
+        function stopBgMusic() {
+            musicPlaying = false;
+            if (musicInterval) {
+                clearTimeout(musicInterval);
+                musicInterval = null;
+            }
+            musicNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+            musicNodes = [];
+        }
+        
+        // Pixelated concert venue background
+        const bgCanvas = document.getElementById('bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        bgCanvas.width = 800;
+        bgCanvas.height = 600;
+
+        const PX = 4;
+        const starField = [];
+        for (let i = 0; i < 80; i++) {
+            starField.push({
+                x: Math.floor(Math.random() * 200) * PX,
+                y: Math.floor(Math.random() * 55) * PX,
+                phase: Math.random() * Math.PI * 2,
+                speed: 0.01 + Math.random() * 0.04
+            });
+        }
+
+        let bgFrame = 0;
+        function animateBg() {
+            const w = 800, h = 600;
+            bgFrame++;
+
+            // Night sky
+            bgCtx.fillStyle = '#070714';
+            bgCtx.fillRect(0, 0, w, h);
+
+            // Twinkling stars
+            starField.forEach(s => {
+                s.phase += s.speed;
+                const alpha = 0.3 + Math.sin(s.phase) * 0.5;
+                if (alpha > 0.15) {
+                    bgCtx.fillStyle = `rgba(255,255,220,${alpha.toFixed(2)})`;
+                    bgCtx.fillRect(s.x, s.y, PX, PX);
+                }
+            });
+
+            // Concert stage
+            const sx = 160, sy = 140, sw = 480, sh = 260;
+            bgCtx.fillStyle = '#0e0e1a';
+            bgCtx.fillRect(sx, sy, sw, sh);
+
+            // Truss bar
+            bgCtx.fillStyle = '#222233';
+            bgCtx.fillRect(sx - 20, sy - 16, sw + 40, 16);
+            bgCtx.fillStyle = '#1a1a2a';
+            bgCtx.fillRect(sx - 8, sy, 12, sh);
+            bgCtx.fillRect(sx + sw - 4, sy, 12, sh);
+
+            // DTRH banner on stage
+            bgCtx.save();
+            bgCtx.font = 'bold 28px "Press Start 2P", monospace';
+            bgCtx.fillStyle = '#222233';
+            bgCtx.textAlign = 'center';
+            bgCtx.letterSpacing = '8px';
+            // Banner background matching stage color
+            const dtrhW = 280;
+            bgCtx.fillStyle = '#1a1a2e';
+            bgCtx.fillRect(sx + (sw - dtrhW) / 2, sy + 10, dtrhW, 40);
+            bgCtx.fillStyle = '#222233';
+            bgCtx.fillRect(sx + (sw - dtrhW) / 2, sy + 10, dtrhW, 3);
+            bgCtx.fillRect(sx + (sw - dtrhW) / 2, sy + 47, dtrhW, 3);
+            // Text in same palette as stage structure
+            bgCtx.fillStyle = '#3a3a55';
+            bgCtx.fillText('D T R H', sx + sw / 2, sy + 40);
+            bgCtx.restore();
+
+            // Animated stage lights
+            const lc = ['#ff1493','#ffd700','#00ffff','#ff4500','#7b68ee','#00ff7f','#ff69b4'];
+            for (let i = 0; i < 7; i++) {
+                const lx = sx + 35 + i * ((sw - 70) / 6);
+                const ci = (i + Math.floor(bgFrame / 18)) % lc.length;
+                bgCtx.save();
+                bgCtx.globalAlpha = 0.06;
+                bgCtx.fillStyle = lc[ci];
+                bgCtx.beginPath();
+                bgCtx.moveTo(lx, sy);
+                bgCtx.lineTo(lx - 50, sy + sh);
+                bgCtx.lineTo(lx + 50, sy + sh);
+                bgCtx.fill();
+                bgCtx.restore();
+                bgCtx.fillStyle = lc[ci];
+                bgCtx.fillRect(Math.floor(lx / PX) * PX, sy - 12, PX * 2, PX * 2);
+            }
+
+            // Crowd silhouettes
+            bgCtx.fillStyle = '#050510';
+            for (let x = 20; x < w - 20; x += 14) {
+                const sway = Math.sin(x * 0.15 + bgFrame * 0.04) * 2;
+                const ch = 30 + Math.sin(x * 0.6) * 10;
+                const cy = sy + sh - ch + sway;
+                bgCtx.beginPath();
+                bgCtx.arc(x + 6, cy - 3, 5, 0, Math.PI * 2);
+                bgCtx.fill();
+                bgCtx.fillRect(x + 2, cy + 2, 9, ch - 2);
+            }
+
+            // Grass field
+            const gt = Math.floor(h * 0.7);
+            for (let y = gt; y < h; y += PX) {
+                const t = (y - gt) / (h - gt);
+                const g = Math.floor(45 + t * 40);
+                bgCtx.fillStyle = `rgb(8,${g},10)`;
+                bgCtx.fillRect(0, y, w, PX);
+            }
+            for (let x = 0; x < w; x += PX) {
+                const bh = 2 + Math.floor(Math.sin(x * 0.25 + bgFrame * 0.015) * 2);
+                bgCtx.fillStyle = '#2a9a2a';
+                for (let i = 0; i < bh; i++) bgCtx.fillRect(x, gt - (i + 1) * PX, PX, PX);
+            }
+
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+        
+        // Game state
+        let score = 0;
+        let loveMeter = 0;
+        let currentPhase = 0;
+        let gameInterval;
+        let timerInterval;
+        
+        // Phase 1 variables
+        let catcherX = 350;
+        const hearts = [];
+        let phase1Difficulty = 1;
+
+        const hintTexts = [
+            "Met z'n tweeen naar Hang Youth",
+            "een-op-een bij de AI builders",
+            "Egbert vraagt of je niet Duco moet regelen",
+            "Duco Appt of je wil afspreken",
+            "Duco wil samen zwemmen?!",
+            "Samen de laatste dag DTRH",
+            "Duco vraagt of je mee gaat naar DTRH",
+            "Duco laat zijn dansmoves zien"
+        ];
+        let hintTextIndex = 0;
+        
+        // Phase 2 variables
+        const loveMessages = [
+            "TIJGERSETJE", "KUS", "SEXGODESS", "ZOEN",
+            "HOT YOGATEACHER", "SCHAT", "NEUKKONING", "DATE?",
+            "LIEF", "TWERKFILMPJE", "SAMEN", "COLLEGA ;)",
+            "GOLFPRO", "HARTJE", "REGELEN", "SEXY"
+        ];
+        let currentWord = "";
+        let typedChars = 0;
+        let phase2Timer = 100;
+        let wordsCompleted = 0;
+        let shuffledWords = [];
+        let shuffledWordIndex = 0;
+        
+        // Phase 3 variables - Minigolf
+        let golfState = 'AIMING'; // AIMING, ROLLING, RESULT
+        let golfHoleIndex = 0;
+        let golfCanvas = null;
+        let golfCtx = null;
+        let golfBall = { x: 0, y: 0, vx: 0, vy: 0 };
+        let golfHole = { x: 0, y: 0 };
+        let golfObstacles = [];
+        let golfArrowAngle = 0;
+        let golfLindsayScore = 0;
+        let golfDucoScore = 0;
+        let golfAnimFrame = null;
+        let golfDucoBall = { x: 0, y: 0, vx: 0, vy: 0, visible: false };
+        let golfDucoPos = { x: 0, y: 0 }; // Duco's resting position (shoots from here)
+        let loveDrainInterval = null;
+        
+        // DOM elements
+        const gameContainer = document.getElementById('game-container');
+        const titleScreen = document.getElementById('title-screen');
+        const hud = document.getElementById('hud');
+        const scoreEl = document.getElementById('score');
+        const loveFill = document.getElementById('love-fill');
+        const phaseNum = document.getElementById('phase-num');
+        const phaseAnnounce = document.getElementById('phase-announce');
+        const announceTitle = document.getElementById('announce-title');
+        const announceDesc = document.getElementById('announce-desc');
+        const announceIcon = document.getElementById('announce-icon');
+        
+        // Phase elements
+        const phase1 = document.getElementById('phase1');
+        const phase2 = document.getElementById('phase2');
+        const phase3 = document.getElementById('phase3');
+        const finale = document.getElementById('finale');
+        const catcher = document.getElementById('catcher');
+        
+        // Allow starting with any key (but not during intro)
+        document.addEventListener('keydown', (e) => {
+            if (introActive) return;
+            if (currentPhase === 0 && !titleScreen.classList.contains('hidden')) {
+                if (e.key !== 'Tab' && e.key !== 'Escape' && e.key !== 'Alt' && e.key !== 'Meta' && e.key !== 'Control' && e.key !== 'Shift') {
+                    startGame();
+                }
+            }
+        });
+        
+        function createParticles(x, y, color, count = 8) {
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle catch-particle';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.background = color;
+                
+                const angle = (Math.PI * 2 / count) * i;
+                const distance = 30 + Math.random() * 40;
+                particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+                
+                gameContainer.appendChild(particle);
+                setTimeout(() => particle.remove(), 600);
+            }
+        }
+        
+        function screenShake() {
+            gameContainer.classList.add('shake');
+            setTimeout(() => gameContainer.classList.remove('shake'), 300);
+        }
+        
+        function updateScore(points, x, y, big = false, customText = null) {
+            score += points;
+            scoreEl.textContent = score;
+
+            const popup = document.createElement('div');
+            if (customText) {
+                popup.className = 'hint-text-popup';
+                popup.textContent = customText;
+                popup.style.left = Math.min(Math.max(50, x || 400), 500) + 'px';
+                popup.style.top = (y || 200) + 'px';
+                gameContainer.appendChild(popup);
+                setTimeout(() => popup.remove(), 6000);
+            } else {
+                popup.className = 'score-popup' + (big ? ' big' : '');
+                popup.textContent = '+' + points;
+                popup.style.left = (x || Math.random() * 600 + 100) + 'px';
+                popup.style.top = (y || Math.random() * 200 + 100) + 'px';
+                gameContainer.appendChild(popup);
+                setTimeout(() => popup.remove(), 800);
+            }
+        }
+        
+        function updateLoveMeter(amount) {
+            loveMeter = Math.min(100, Math.max(0, loveMeter + amount));
+            loveFill.style.width = loveMeter + '%';
+
+            // Stage completes when love meter is full
+            if (loveMeter >= 100) {
+                if (currentPhase === 1) endPhase1();
+                else if (currentPhase === 2) endPhase2();
+                // Phase 3 ends when Lindsay reaches 5 points, not by love meter
+            }
+        }
+        
+        function startGame() {
+            initAudio();
+            titleScreen.classList.add('hidden');
+            hud.classList.remove('hidden');
+            loveMeter = 0;
+            loveFill.style.width = '0%';
+            score = 0;
+            scoreEl.textContent = '0';
+            playSound('phase');
+            announcePhase(1, "HINTS OPVANGEN", "💬", "Probeer de hints op te vangen!", startPhase1);
+        }
+        
+        function announcePhase(num, title, icon, desc, callback) {
+            phaseNum.textContent = num;
+            announceTitle.textContent = title;
+            announceIcon.textContent = icon;
+            announceDesc.textContent = desc;
+            phaseAnnounce.classList.remove('hidden');
+            
+            setTimeout(() => {
+                phaseAnnounce.classList.add('hidden');
+                callback();
+            }, 3500);
+        }
+        
+        // ============ PHASE 1: HEART CATCHER ============
+        let phase1Ended = false;
+        let phase1StartTime = 0;
+
+        function startPhase1() {
+            currentPhase = 1;
+            phase1.style.display = 'block';
+            phase1Difficulty = 1;
+            phase1Ended = false;
+            loveMeter = 0;
+            loveFill.style.width = '0%';
+
+            // Mouse movement
+            gameContainer.addEventListener('mousemove', moveCatcher);
+            gameContainer.addEventListener('touchmove', moveCatcherTouch);
+
+            // Spawn hints - starts slow for reading, speeds up over time
+            phase1StartTime = Date.now();
+            const phase1Start = phase1StartTime;
+            function scheduleNextHint() {
+                if (currentPhase !== 1) return;
+                const elapsed = (Date.now() - phase1Start) / 1000;
+                const interval = Math.max(500, 2800 - elapsed * 25);
+                gameInterval = setTimeout(() => {
+                    spawnHeart();
+                    scheduleNextHint();
+                }, interval);
+            }
+            spawnHeart();
+            scheduleNextHint();
+
+            // Increase difficulty over time
+            const difficultyInterval = setInterval(() => {
+                if (currentPhase !== 1) {
+                    clearInterval(difficultyInterval);
+                    return;
+                }
+                phase1Difficulty = Math.min(phase1Difficulty + 0.08, 2.2);
+            }, 3000);
+
+            // Love meter slowly drains - this is the challenge!
+            loveDrainInterval = setInterval(() => {
+                if (currentPhase !== 1) {
+                    clearInterval(loveDrainInterval);
+                    return;
+                }
+                loveMeter = Math.max(0, loveMeter - 0.4);
+                loveFill.style.width = loveMeter + '%';
+            }, 100);
+
+            // Safety timeout - end phase after 120 seconds max
+            setTimeout(() => { if (currentPhase === 1) endPhase1(); }, 120000);
+        }
+        
+        function moveCatcher(e) {
+            const rect = gameContainer.getBoundingClientRect();
+            catcherX = e.clientX - rect.left - 60;
+            catcherX = Math.max(0, Math.min(680, catcherX));
+            catcher.style.left = catcherX + 'px';
+        }
+        
+        function moveCatcherTouch(e) {
+            e.preventDefault();
+            const rect = gameContainer.getBoundingClientRect();
+            catcherX = e.touches[0].clientX - rect.left - 60;
+            catcherX = Math.max(0, Math.min(680, catcherX));
+            catcher.style.left = catcherX + 'px';
+        }
+        
+        function spawnHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            
+            const rand = Math.random();
+            if (rand < 0.52) {
+                heart.classList.add('good');
+                heart.textContent = '❤️';
+                heart.dataset.type = 'good';
+            } else if (rand < 0.67) {
+                heart.classList.add('bonus');
+                heart.textContent = '💊';
+                heart.dataset.type = 'bonus';
+            } else if (rand < 0.88) {
+                heart.classList.add('bad');
+                heart.textContent = '💔';
+                heart.dataset.type = 'bad';
+            } else {
+                heart.classList.add('powerup');
+                heart.textContent = '🕺';
+                heart.dataset.type = 'powerup';
+            }
+            
+            heart.style.left = Math.random() * 720 + 'px';
+            heart.style.top = '-50px';
+            
+            phase1.appendChild(heart);
+            hearts.push(heart);
+            
+            animateHeart(heart);
+        }
+        
+        function animateHeart(heart) {
+            let top = -50;
+            const baseSpeed = 3.2;
+            const speed = (baseSpeed + Math.random() * 1.5) * phase1Difficulty;
+            const wobbleSpeed = Math.random() * 0.05;
+            const wobbleAmount = Math.random() * 30;
+            let wobbleOffset = Math.random() * Math.PI * 2;
+            const startX = parseFloat(heart.style.left);
+            
+            const fall = setInterval(() => {
+                if (currentPhase !== 1) {
+                    clearInterval(fall);
+                    return;
+                }
+                
+                top += speed;
+                wobbleOffset += wobbleSpeed;
+                heart.style.top = top + 'px';
+                heart.style.left = (startX + Math.sin(wobbleOffset) * wobbleAmount) + 'px';
+                
+                // Check collision with catcher
+                const heartRect = heart.getBoundingClientRect();
+                const catcherRect = catcher.getBoundingClientRect();
+                
+                if (heartRect.bottom > catcherRect.top + 10 &&
+                    heartRect.top < catcherRect.bottom - 10 &&
+                    heartRect.right > catcherRect.left + 15 &&
+                    heartRect.left < catcherRect.right - 15) {
+                    
+                    const hx = parseFloat(heart.style.left) + 16;
+                    const hy = top;
+                    
+                    catcher.classList.add('catching');
+                    setTimeout(() => catcher.classList.remove('catching'), 100);
+                    
+                    if (heart.dataset.type === 'good') {
+                        const hint = hintTexts[hintTextIndex % hintTexts.length];
+                        hintTextIndex++;
+                        updateScore(10, hx, hy, false, hint);
+                        updateLoveMeter(10);
+                        playSound('catch');
+                        createParticles(hx, hy, '#ff69b4', 6);
+                    } else if (heart.dataset.type === 'bonus') {
+                        updateScore(0, hx, hy, false, "Zo wordt hints opvangen wel lastig!");
+                        updateLoveMeter(-5);
+                        playSound('bad');
+                        createParticles(hx, hy, '#ff00ff', 8);
+                        catcher.classList.add('shrunk');
+                        setTimeout(() => catcher.classList.remove('shrunk'), 5000);
+                    } else if (heart.dataset.type === 'powerup') {
+                        updateScore(100, hx, hy, true, "Duco laat zijn dansmoves zien");
+                        // Starts small (10), ramps up to 50 over ~30 seconds
+                        const elapsedSec = (Date.now() - phase1StartTime) / 1000;
+                        const powerupLove = Math.min(50, 10 + elapsedSec * 1.3);
+                        updateLoveMeter(powerupLove);
+                        playSound('bonus');
+                        createParticles(hx, hy, '#00ffff', 16);
+                        screenShake();
+                    } else {
+                        updateScore(0, hx, hy, false, "Hmm...weird");
+                        updateLoveMeter(-15);
+                        playSound('bad');
+                        screenShake();
+                    }
+                    
+                    heart.remove();
+                    clearInterval(fall);
+                }
+                
+                // Remove if off screen (use container height)
+                const containerHeight = gameContainer.getBoundingClientRect().height;
+                if (top > containerHeight + 20) {
+                    heart.remove();
+                    clearInterval(fall);
+                }
+            }, 16);
+        }
+        
+        function endPhase1() {
+            if (phase1Ended) return;
+            phase1Ended = true;
+            currentPhase = 0;
+            clearTimeout(gameInterval);
+            if (loveDrainInterval) clearInterval(loveDrainInterval);
+            gameContainer.removeEventListener('mousemove', moveCatcher);
+            gameContainer.removeEventListener('touchmove', moveCatcherTouch);
+            phase1.style.display = 'none';
+
+            document.querySelectorAll('.heart').forEach(h => h.remove());
+
+            playSound('phase');
+            showKissTransition();
+        }
+
+        function drawSmallHeart(p, x, y, c) {
+            p(x, y+1, c); p(x+1, y, c); p(x+2, y+1, c);
+            p(x+3, y, c); p(x+4, y+1, c);
+            for (let i = 0; i < 5; i++) p(x+i, y+2, c);
+            p(x+1, y+3, c); p(x+2, y+3, c); p(x+3, y+3, c);
+            p(x+2, y+4, c);
+        }
+
+        function drawKissScene(frame) {
+            const canvas = document.getElementById('kiss-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 120;
+            canvas.height = 120;
+
+            const f = frame || 0;
+            const p = (x, y, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, 1, 1); };
+            const r = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+
+            // === SKY GRADIENT ===
+            [[0,'#04040e'],[10,'#060618'],[20,'#080824'],[30,'#0b0b30'],[40,'#0e0e3a'],[50,'#111144'],[60,'#14144e']].forEach(([y,c],i,a) => {
+                const h = i < a.length-1 ? a[i+1][0]-y : 16;
+                r(0, y, 120, h, c);
+            });
+
+            // === CRESCENT MOON ===
+            for (let dy = -5; dy <= 5; dy++) {
+                for (let dx = -5; dx <= 5; dx++) {
+                    if (dx*dx + dy*dy <= 25) p(100+dx, 14+dy, '#FFFDE0');
+                }
+            }
+            for (let dy = -5; dy <= 5; dy++) {
+                for (let dx = -5; dx <= 5; dx++) {
+                    if ((dx-3)*(dx-3) + dy*dy <= 18) {
+                        const sy = 14+dy;
+                        const c = sy < 10 ? '#04040e' : sy < 20 ? '#060618' : '#080824';
+                        p(100+dx, sy, c);
+                    }
+                }
+            }
+
+            // === STARS (twinkling) ===
+            [[8,4],[28,10],[48,3],[72,8],[88,5],[112,7],[18,22],[42,18],[68,15],[92,22],[108,18],[5,35],[55,30],[85,32]].forEach(([x,y], i) => {
+                const bright = (f + i * 4) % 12 < 8;
+                p(x, y, bright ? '#fff' : '#88aacc');
+                if (bright) { p(x-1, y, '#6688aa'); p(x+1, y, '#6688aa'); p(x, y-1, '#6688aa'); p(x, y+1, '#6688aa'); }
+            });
+            [[3,7],[14,2],[22,16],[35,6],[40,25],[55,8],[63,20],[75,4],[80,18],[96,12],[104,24],[115,4],[5,28],[30,30],[52,26],[85,28],[98,3],[10,14],[58,12],[76,22],[32,42],[95,38],[15,40],[65,35],[110,30]].forEach(([x,y]) => p(x, y, '#aabbcc'));
+
+            // === DISTANT HILLS ===
+            for (let x = 0; x < 120; x++) {
+                const h = Math.round(4 * Math.sin(x * 0.05) + 3 * Math.sin(x * 0.12 + 1));
+                if (h > 0) r(x, 62 - h, 1, h + 3, '#08081a');
+            }
+
+            // === STAGE (background) ===
+            r(20, 38, 80, 18, '#0a0a18');
+            r(18, 36, 84, 2, '#1a1a30');
+            r(16, 56, 88, 2, '#0d0d1a');
+            r(18, 34, 84, 2, '#222238');
+            r(20, 30, 2, 4, '#2a2a3e'); r(98, 30, 2, 4, '#2a2a3e');
+
+            // Speaker stacks
+            r(20, 40, 8, 16, '#0e0e18');
+            for (let sy = 41; sy < 55; sy += 5) { r(21, sy, 6, 3, '#181830'); p(23, sy+1, '#222240'); p(25, sy+1, '#222240'); }
+            r(92, 40, 8, 16, '#0e0e18');
+            for (let sy = 41; sy < 55; sy += 5) { r(93, sy, 6, 3, '#181830'); p(95, sy+1, '#222240'); p(97, sy+1, '#222240'); }
+
+            // Stage lights with beams
+            [[32,'#ff1493'],[42,'#ffd700'],[52,'#00e5ff'],[62,'#ff6b35'],[72,'#9b59b6'],[82,'#00ff88']].forEach(([lx, c]) => {
+                r(lx, 35, 2, 1, c);
+                ctx.globalAlpha = 0.04;
+                for (let by = 37; by < 72; by++) {
+                    const sp = Math.floor((by - 37) / 3);
+                    r(lx - sp, by, 1 + sp * 2, 1, c);
+                }
+                ctx.globalAlpha = 1.0;
+            });
+
+            // Band silhouettes on stage
+            r(37, 44, 3, 2, '#0c0c1a'); r(36, 46, 5, 5, '#0c0c1a'); r(34, 45, 2, 3, '#0c0c1a');
+            r(57, 42, 3, 2, '#0c0c1a'); r(56, 44, 5, 6, '#0c0c1a'); r(58, 40, 1, 4, '#0c0c1a');
+            r(77, 44, 3, 2, '#0c0c1a'); r(76, 46, 5, 4, '#0c0c1a'); r(74, 46, 2, 4, '#0c0c1a'); r(81, 46, 2, 4, '#0c0c1a');
+
+            // === CROWD ===
+            for (let cx = 3; cx < 117; cx += 5) {
+                const yo = ((cx * 7 + 3) % 4);
+                r(cx, 60+yo, 3, 2, '#08081e');
+                r(cx-1, 62+yo, 5, 16-yo, '#08081e');
+            }
+            for (let cx = 5; cx < 115; cx += 5) {
+                const yo = ((cx * 5 + 1) % 3);
+                r(cx, 64+yo, 3, 2, '#0e0e26');
+                r(cx-1, 66+yo, 5, 12-yo, '#0e0e26');
+            }
+            // Raised arms
+            [[12,58],[30,56],[48,57],[68,56],[88,58],[105,57]].forEach(([ax,ay]) => {
+                r(ax, ay, 1, 6, '#08081e'); r(ax+3, ay+1, 1, 5, '#08081e');
+            });
+            // Phone lights in crowd
+            [[18,66],[38,64],[58,66],[78,65],[98,66]].forEach(([px,py], i) => {
+                if ((f + i * 6) % 20 < 14) p(px, py, '#6cf');
+            });
+
+            // === GRASS ===
+            r(0, 78, 120, 42, '#185a18');
+            r(0, 78, 120, 1, '#2a8a2a'); r(0, 79, 120, 1, '#228822');
+            for (let x = 0; x < 120; x += 2) {
+                p(x, 77, '#258a25');
+                if (x % 3 === 0) p(x, 76, '#2d9d2d');
+            }
+            // Flowers
+            [[6,77,'#ff69b4'],[18,76,'#ffd700'],[32,77,'#fff'],[46,76,'#ff69b4'],[74,77,'#ffd700'],[90,76,'#fff'],[106,77,'#ff69b4'],[114,76,'#ffd700']].forEach(([fx,fy,fc]) => {
+                p(fx, fy, fc); p(fx, fy+1, '#2a8a2a');
+            });
+
+            // === DUCO (left, facing right) ===
+            const dx = 43, dy = 50;
+            // Hair (brown, messy top)
+            r(dx+1, dy, 8, 2, '#8B5E3C');
+            r(dx, dy+2, 10, 2, '#8B5E3C');
+            p(dx+2, dy-1, '#8B5E3C'); p(dx+6, dy-1, '#8B5E3C');
+            p(dx, dy+4, '#6B3E1C');
+            // Face
+            r(dx+1, dy+4, 8, 7, '#FFDAB9');
+            r(dx+2, dy+5, 6, 5, '#FFE4C4');
+            // Eyes (looking right)
+            r(dx+3, dy+5, 2, 2, '#fff'); p(dx+4, dy+5, '#3a7040'); p(dx+4, dy+6, '#222');
+            r(dx+6, dy+5, 2, 2, '#fff'); p(dx+7, dy+5, '#3a7040'); p(dx+7, dy+6, '#222');
+            // Eyebrows
+            r(dx+3, dy+4, 2, 1, '#6B3E1C'); r(dx+6, dy+4, 2, 1, '#6B3E1C');
+            // Blush
+            r(dx+2, dy+8, 2, 1, '#FFB0A0'); r(dx+7, dy+8, 2, 1, '#FFB0A0');
+            // Kiss lips (right side, toward Lindsay)
+            p(dx+8, dy+8, '#D46'); p(dx+9, dy+8, '#D46');
+            // Neck
+            r(dx+3, dy+11, 4, 2, '#FFDAB9');
+            // Shirt (blue with shading)
+            r(dx+1, dy+13, 8, 4, '#2255AA');
+            r(dx+2, dy+13, 6, 1, '#3366BB');
+            r(dx+1, dy+17, 8, 3, '#1E4488');
+            // Arm reaching toward Lindsay
+            r(dx+9, dy+14, 4, 2, '#2255AA');
+            r(dx+13, dy+14, 2, 2, '#FFDAB9');
+            // Jeans with crease
+            r(dx+2, dy+20, 7, 4, '#2a3a55');
+            r(dx+2, dy+20, 3, 4, '#2e4060');
+            p(dx+5, dy+20, '#223050'); p(dx+5, dy+21, '#223050');
+            // Shoes
+            r(dx+2, dy+24, 3, 2, '#333'); r(dx+6, dy+24, 3, 2, '#333');
+
+            // === LINDSAY (right, facing left) ===
+            const lx = 57, ly = 50;
+            // Hair (dark brown, long flowing)
+            r(lx+1, ly, 8, 2, '#3A1C07');
+            r(lx, ly+2, 10, 2, '#3A1C07');
+            r(lx-1, ly+4, 2, 13, '#3A1C07');
+            r(lx+9, ly+4, 2, 13, '#3A1C07');
+            p(lx+3, ly+1, '#5A3C17'); p(lx+6, ly+1, '#5A3C17');
+            // Face
+            r(lx+1, ly+4, 8, 7, '#FFDAB9');
+            r(lx+2, ly+5, 6, 5, '#FFE4C4');
+            // Eyes (looking left)
+            r(lx+2, ly+5, 2, 2, '#fff'); p(lx+2, ly+5, '#3a6045'); p(lx+2, ly+6, '#222');
+            r(lx+5, ly+5, 2, 2, '#fff'); p(lx+5, ly+5, '#3a6045'); p(lx+5, ly+6, '#222');
+            // Eyelashes
+            p(lx+1, ly+5, '#3A1C07'); p(lx+4, ly+5, '#3A1C07'); p(lx+7, ly+5, '#3A1C07');
+            // Eyebrows
+            r(lx+2, ly+4, 2, 1, '#3A1C07'); r(lx+5, ly+4, 2, 1, '#3A1C07');
+            // Blush
+            r(lx+1, ly+8, 2, 1, '#FFB0A0'); r(lx+7, ly+8, 2, 1, '#FFB0A0');
+            // Kiss lips (left side, toward Duco)
+            p(lx, ly+8, '#D46'); p(lx+1, ly+8, '#D46');
+            // Neck
+            r(lx+3, ly+11, 4, 2, '#FFDAB9');
+            // Dress (pink/magenta with detail)
+            r(lx+1, ly+13, 8, 6, '#DD3388');
+            r(lx+2, ly+13, 6, 1, '#EE5599');
+            r(lx, ly+19, 10, 3, '#CC2277');
+            r(lx-1, ly+21, 12, 2, '#BB1166');
+            r(lx+4, ly+15, 2, 5, '#BB1166');
+            // Arm reaching toward Duco
+            r(lx-3, ly+14, 3, 2, '#DD3388');
+            r(lx-5, ly+14, 2, 2, '#FFDAB9');
+            // Legs & shoes
+            r(lx+2, ly+23, 2, 2, '#FFDAB9'); r(lx+6, ly+23, 2, 2, '#FFDAB9');
+            r(lx+1, ly+25, 3, 1, '#CC2277'); r(lx+5, ly+25, 3, 1, '#CC2277');
+
+            // === MAIN HEART between them ===
+            const hx = 54, hy = 44;
+            p(hx, hy+1, '#FF1493'); p(hx+1, hy, '#FF1493'); p(hx+2, hy, '#FF1493');
+            p(hx+3, hy+1, '#FF1493'); p(hx+4, hy, '#FF1493'); p(hx+5, hy, '#FF1493'); p(hx+6, hy+1, '#FF1493');
+            r(hx, hy+2, 7, 2, '#FF1493');
+            p(hx+1, hy+4, '#FF1493'); r(hx+2, hy+4, 3, 1, '#FF1493'); p(hx+5, hy+4, '#FF1493');
+            p(hx+2, hy+5, '#FF1493'); p(hx+3, hy+5, '#FF1493'); p(hx+4, hy+5, '#FF1493');
+            p(hx+3, hy+6, '#FF1493');
+            // Heart highlight
+            p(hx+1, hy+1, '#FF69B4'); p(hx+2, hy+1, '#FF69B4');
+
+            // === FLOATING HEARTS (animated) ===
+            [[36,46,20],[72,48,18],[48,40,22],[66,42,16],[56,36,24]].forEach(([sx,sy,period]) => {
+                const ay = sy - (f % period);
+                if (ay > 8 && ay < 72) drawSmallHeart(p, sx, ay, '#ff69b4');
+            });
+
+            // === SPARKLES (animated) ===
+            [[18,52],[34,58],[82,54],[98,48],[52,38],[68,38],[44,64],[76,62]].forEach(([sx,sy], i) => {
+                if ((f + i * 5) % 14 < 8) {
+                    p(sx, sy, '#FFD700');
+                    if ((f + i * 5) % 14 < 4) { p(sx-1, sy, '#997700'); p(sx+1, sy, '#997700'); p(sx, sy-1, '#997700'); p(sx, sy+1, '#997700'); }
+                }
+            });
+
+            // === FIREFLIES ===
+            [[10,68],[25,62],[95,65],[110,58],[50,70],[70,68]].forEach(([fx,fy], i) => {
+                const ox = Math.round(3 * Math.sin((f + i * 10) * 0.15));
+                const oy = Math.round(2 * Math.cos((f + i * 7) * 0.12));
+                if ((f + i * 4) % 8 < 6) p(fx+ox, fy+oy, '#ffffaa');
+            });
+        }
+
+        function showKissTransition() {
+            const kissDiv = document.getElementById('kiss-transition');
+            kissDiv.style.display = 'flex';
+            playSound('bonus');
+
+            let kissFrame = 0;
+            drawKissScene(0);
+            const kissAnim = setInterval(() => drawKissScene(++kissFrame), 100);
+            const kissFireworks = setInterval(() => createFirework(kissDiv), 400);
+
+            setTimeout(() => {
+                clearInterval(kissFireworks);
+                clearInterval(kissAnim);
+                kissDiv.style.display = 'none';
+                announcePhase(2, "FLIRTY TEXTING", "💌", "Probeer met Duco te flirten via Whatsapp!", startPhase2);
+            }, 6000);
+        }
+        
+        // ============ PHASE 2: FLIRT TEXTING ============
+        let phase2Ended = false;
+
+        function startPhase2() {
+            currentPhase = 2;
+            phase2.style.display = 'flex';
+            phase2Ended = false;
+            loveMeter = 0;
+            loveFill.style.width = '0%';
+
+            const input = document.getElementById('type-input');
+            input.value = '';
+            input.focus();
+            input.addEventListener('input', checkTyping);
+
+            wordsCompleted = 0;
+            shuffledWords = [...loveMessages].sort(() => Math.random() - 0.5);
+            shuffledWordIndex = 0;
+            document.getElementById('word-num').textContent = '1';
+            nextWord();
+
+            // Timer per word
+            phase2Timer = 100;
+            const timerFill = document.getElementById('timer-fill');
+            timerInterval = setInterval(() => {
+                phase2Timer -= 0.4;
+                timerFill.style.width = phase2Timer + '%';
+
+                if (phase2Timer < 30) {
+                    timerFill.classList.add('urgent');
+                } else {
+                    timerFill.classList.remove('urgent');
+                }
+
+                if (phase2Timer <= 0) {
+                    playSound('miss');
+                    screenShake();
+                    updateLoveMeter(-8);
+                    nextWord();
+                    phase2Timer = 100;
+                }
+            }, 50);
+
+            // Love meter slowly drains
+            loveDrainInterval = setInterval(() => {
+                if (currentPhase !== 2) {
+                    clearInterval(loveDrainInterval);
+                    return;
+                }
+                loveMeter = Math.max(0, loveMeter - 0.25);
+                loveFill.style.width = loveMeter + '%';
+            }, 100);
+
+            // Safety timeout
+            setTimeout(() => { if (currentPhase === 2) endPhase2(); }, 60000);
+        }
+        
+        function nextWord() {
+            wordsCompleted++;
+            document.getElementById('word-num').textContent = wordsCompleted;
+
+            // Cycle all words once in shuffled order, then random
+            if (shuffledWordIndex < shuffledWords.length) {
+                currentWord = shuffledWords[shuffledWordIndex];
+                shuffledWordIndex++;
+            } else {
+                currentWord = loveMessages[Math.floor(Math.random() * loveMessages.length)];
+            }
+            typedChars = 0;
+
+            // Dynamic font size to prevent long words overflowing
+            const wordDisplay = document.getElementById('word-display');
+            if (currentWord.length > 7) {
+                wordDisplay.style.fontSize = '24px';
+                wordDisplay.style.letterSpacing = '4px';
+            } else if (currentWord.length > 5) {
+                wordDisplay.style.fontSize = '32px';
+                wordDisplay.style.letterSpacing = '6px';
+            } else {
+                wordDisplay.style.fontSize = '42px';
+                wordDisplay.style.letterSpacing = '8px';
+            }
+
+            updateWordDisplay();
+            document.getElementById('type-input').value = '';
+            phase2Timer = 100;
+            document.getElementById('timer-fill').classList.remove('urgent');
+        }
+        
+        function updateWordDisplay() {
+            const display = document.getElementById('word-display');
+            const typed = currentWord.substring(0, typedChars);
+            const remaining = currentWord.substring(typedChars);
+            display.innerHTML = `<span class="typed">${typed}</span><span class="remaining">${remaining}</span><span class="cursor"></span>`;
+        }
+        
+        function checkTyping(e) {
+            const input = e.target.value.toUpperCase();
+            const expected = currentWord.substring(0, input.length);
+            
+            if (input === expected) {
+                typedChars = input.length;
+                updateWordDisplay();
+                playSound('type');
+                
+                if (input === currentWord) {
+                    const bonus = Math.floor(phase2Timer / 10) * 10;
+                    updateScore(100 + bonus, 400, 250, true);
+                    updateLoveMeter(12);
+                    playSound('word');
+                    createParticles(400, 300, '#ff1493', 10);
+                    nextWord();
+                }
+            }
+        }
+        
+        function endPhase2() {
+            if (phase2Ended) return;
+            phase2Ended = true;
+            currentPhase = 0;
+            clearInterval(timerInterval);
+            if (loveDrainInterval) clearInterval(loveDrainInterval);
+            phase2.style.display = 'none';
+            document.getElementById('type-input').removeEventListener('input', checkTyping);
+
+            // Keep meter full through the transition
+            loveMeter = 100;
+            loveFill.style.width = '100%';
+
+            playSound('phase');
+            showDateTransition();
+        }
+
+        function drawDateScene(frame) {
+            const canvas = document.getElementById('date-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 120;
+            canvas.height = 120;
+
+            const f = frame || 0;
+            const p = (x, y, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, 1, 1); };
+            const r = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+
+            // === LEFT HALF - Lindsay's room ===
+            r(0, 0, 57, 120, '#1a0a20');
+            r(0, 90, 57, 30, '#2a1815');
+
+            // Window (upper left)
+            r(4, 6, 16, 14, '#443322');
+            r(5, 7, 14, 12, '#060620');
+            r(12, 7, 1, 12, '#443322'); r(5, 13, 14, 1, '#443322');
+            [[7,9],[10,11],[14,8],[17,10]].forEach(([x,y]) => p(x, y, '#ffe'));
+            p(16, 8, '#fffde0'); p(17, 8, '#fffde0'); p(16, 9, '#fffde0');
+
+            // Fairy lights on wall
+            ['#ff69b4','#ffd700','#ff69b4','#00e5ff','#ff69b4','#ffd700','#ff69b4'].forEach((c, i) => {
+                const fx = 4 + i * 7, fy = 26 + Math.round(Math.sin(i * 0.8) * 2);
+                p(fx, fy, (f + i * 3) % 8 < 6 ? c : '#333');
+                if (i < 6) p(Math.round((fx + 4 + (i+1)*7)/2), fy + 1, '#444');
+            });
+
+            // Poster on wall (heart)
+            r(36, 8, 14, 10, '#DD3388');
+            r(37, 9, 12, 8, '#ff69b4');
+            p(42, 12, '#fff'); p(43, 11, '#fff'); p(44, 12, '#fff'); p(43, 13, '#fff');
+
+            // Nightstand with lamp
+            r(4, 68, 10, 22, '#6B4226');
+            r(4, 68, 10, 1, '#8B6246');
+            r(7, 58, 4, 10, '#aa8866');
+            r(5, 54, 8, 4, '#ffcc88');
+            // Lamp glow
+            ctx.globalAlpha = 0.06;
+            for (let gy = 58; gy < 85; gy++) {
+                const sp = Math.floor((gy - 58) / 2);
+                r(7 - sp, gy, 4 + sp * 2, 1, '#ffcc66');
+            }
+            ctx.globalAlpha = 1.0;
+
+            // Bed
+            r(16, 68, 40, 20, '#6B4226');
+            r(16, 66, 4, 2, '#6B4226'); r(52, 66, 4, 2, '#6B4226');
+            r(18, 70, 36, 16, '#ff8fbc');
+            r(18, 70, 36, 3, '#ffb6d9');
+            // Blanket pattern
+            for (let bx = 20; bx < 52; bx += 6) { p(bx, 78, '#ff79ac'); p(bx+2, 81, '#ff79ac'); }
+
+            // Lindsay on bed (on stomach, propped up, head near center/divider)
+            // Head
+            r(40, 62, 7, 7, '#FFDAB9');
+            r(39, 61, 8, 2, '#3A1C07');
+            r(38, 63, 2, 6, '#3A1C07'); r(47, 63, 2, 6, '#3A1C07');
+            p(41, 63, '#FFE4C4'); p(42, 63, '#FFE4C4'); p(43, 63, '#FFE4C4'); p(44, 63, '#FFE4C4'); p(45, 63, '#FFE4C4');
+            p(42, 64, '#333'); p(44, 64, '#333');
+            p(41, 66, '#E88'); p(42, 66, '#E88');
+            p(40, 65, '#FFB0A0'); p(46, 65, '#FFB0A0');
+            // Body on bed
+            r(24, 68, 16, 4, '#DD3388');
+            // Arms propped up
+            r(38, 69, 4, 2, '#FFDAB9');
+            // Legs/feet
+            r(20, 68, 6, 3, '#FFDAB9');
+            r(18, 67, 3, 3, '#CC2277');
+
+            // Phone in hands
+            r(42, 69, 4, 6, '#222');
+            r(43, 70, 2, 4, (f % 6) < 4 ? '#6cf' : '#5be');
+            // Phone glow
+            ctx.globalAlpha = 0.08;
+            r(39, 67, 10, 10, '#6cf');
+            ctx.globalAlpha = 1.0;
+
+            // Heart floating from phone
+            const lhY = 56 - (f % 16);
+            if (lhY > 30 && lhY < 58) drawSmallHeart(p, 44, lhY, '#ff69b4');
+
+            // === RIGHT HALF - Duco's room ===
+            r(63, 0, 57, 120, '#0a1020');
+            r(63, 90, 57, 30, '#1a1520');
+
+            // Window (upper right)
+            r(100, 6, 16, 14, '#334455');
+            r(101, 7, 14, 12, '#060620');
+            r(108, 7, 1, 12, '#334455'); r(101, 13, 14, 1, '#334455');
+            [[103,9],[106,11],[110,8],[113,10]].forEach(([x,y]) => p(x, y, '#ffe'));
+            p(112, 8, '#fffde0'); p(113, 8, '#fffde0'); p(112, 9, '#fffde0');
+
+            // Music poster on wall
+            r(70, 8, 14, 10, '#2255AA');
+            r(71, 9, 12, 8, '#3366BB');
+            r(76, 11, 1, 4, '#fff'); r(76, 11, 3, 1, '#fff'); p(78, 12, '#fff');
+
+            // Shelf with books
+            r(88, 26, 22, 2, '#5a4a3a');
+            r(90, 20, 3, 6, '#c44'); r(94, 21, 2, 5, '#4a4'); r(97, 19, 3, 7, '#44c'); r(101, 20, 3, 6, '#cc4');
+
+            // Nightstand with lamp
+            r(106, 68, 10, 22, '#5B3216');
+            r(106, 68, 10, 1, '#7B5236');
+            r(109, 58, 4, 10, '#667788');
+            r(107, 54, 8, 4, '#aaccee');
+            // Lamp glow
+            ctx.globalAlpha = 0.05;
+            for (let gy = 58; gy < 85; gy++) {
+                const sp = Math.floor((gy - 58) / 2);
+                r(109 - sp, gy, 4 + sp * 2, 1, '#aaccee');
+            }
+            ctx.globalAlpha = 1.0;
+
+            // Bed
+            r(64, 68, 40, 20, '#5B3216');
+            r(64, 66, 4, 2, '#5B3216'); r(100, 66, 4, 2, '#5B3216');
+            r(66, 70, 36, 16, '#4477aa');
+            r(66, 70, 36, 3, '#6699cc');
+            // Blanket pattern
+            for (let bx = 68; bx < 100; bx += 6) { p(bx, 78, '#3366aa'); p(bx+2, 81, '#3366aa'); }
+
+            // Duco on bed (on stomach, propped up, head near center/divider)
+            // Head
+            r(73, 62, 7, 7, '#FFDAB9');
+            r(73, 61, 8, 2, '#8B5E3C');
+            p(72, 63, '#8B5E3C'); p(80, 63, '#8B5E3C');
+            p(74, 63, '#FFE4C4'); p(75, 63, '#FFE4C4'); p(76, 63, '#FFE4C4'); p(77, 63, '#FFE4C4'); p(78, 63, '#FFE4C4');
+            p(75, 64, '#333'); p(77, 64, '#333');
+            p(77, 66, '#E88'); p(78, 66, '#E88');
+            p(74, 65, '#FFB0A0'); p(79, 65, '#FFB0A0');
+            // Body
+            r(80, 68, 16, 4, '#2255AA');
+            // Arms propped up
+            r(78, 69, 4, 2, '#FFDAB9');
+            // Legs/feet
+            r(94, 68, 6, 3, '#2a3a55');
+            r(99, 67, 3, 3, '#333');
+
+            // Phone
+            r(74, 69, 4, 6, '#222');
+            r(75, 70, 2, 4, (f % 6) < 4 ? '#6cf' : '#5be');
+            // Phone glow
+            ctx.globalAlpha = 0.08;
+            r(71, 67, 10, 10, '#6cf');
+            ctx.globalAlpha = 1.0;
+
+            // Heart from phone
+            const rhY = 56 - ((f + 8) % 16);
+            if (rhY > 30 && rhY < 58) drawSmallHeart(p, 72, rhY, '#ff69b4');
+
+            // === GLOWING DIVIDER ===
+            r(58, 0, 4, 120, '#ff69b4');
+            ctx.globalAlpha = 0.08;
+            r(55, 0, 3, 120, '#ff69b4'); r(62, 0, 3, 120, '#ff69b4');
+            ctx.globalAlpha = 0.04;
+            r(53, 0, 2, 120, '#ff69b4'); r(65, 0, 2, 120, '#ff69b4');
+            ctx.globalAlpha = 1.0;
+
+            // === HEARTS CROSSING DIVIDER (animated) ===
+            [[48,32,14,1],[70,48,16,-1],[46,58,12,1],[72,22,18,-1],[50,72,10,1]].forEach(([sx,sy,period,dir]) => {
+                const prog = (f % period) / period;
+                const cx = sx + dir * prog * 22;
+                if (cx > 44 && cx < 76) drawSmallHeart(p, Math.round(cx), sy, '#FF1493');
+            });
+        }
+
+        function showDateTransition() {
+            const dateDiv = document.getElementById('date-transition');
+            dateDiv.style.display = 'flex';
+            playSound('bonus');
+
+            let dateFrame = 0;
+            drawDateScene(0);
+            const dateAnim = setInterval(() => drawDateScene(++dateFrame), 100);
+            const dateFireworks = setInterval(() => createFirework(dateDiv), 500);
+
+            setTimeout(() => {
+                clearInterval(dateFireworks);
+                clearInterval(dateAnim);
+                dateDiv.style.display = 'none';
+                announcePhase(3, "ALOHA MINIGOLF", "🌴", "Win om te scoren! 😏", startPhase3);
+            }, 6000);
+        }
+        
+        // ============ PHASE 3: MINIGOLF ============
+        let phase3Ended = false;
+
+        const golfHoleLayouts = [
+            // Hole 1: Open field, straight shot
+            { ball: { x: 400, y: 480 }, hole: { x: 400, y: 200 }, obstacles: [] },
+            // Hole 2: Wall blocks direct path, must go around
+            { ball: { x: 150, y: 480 }, hole: { x: 650, y: 200 }, obstacles: [
+                { x: 350, y: 180, w: 25, h: 280 }
+            ]},
+            // Hole 3: Zigzag - two long walls force S-path
+            { ball: { x: 100, y: 520 }, hole: { x: 700, y: 190 }, obstacles: [
+                { x: 250, y: 160, w: 25, h: 300 },
+                { x: 530, y: 240, w: 25, h: 300 }
+            ]},
+            // Hole 4: Two walls with tight gaps, must thread through both
+            { ball: { x: 400, y: 520 }, hole: { x: 400, y: 190 }, obstacles: [
+                { x: 100, y: 380, w: 260, h: 25 },
+                { x: 420, y: 380, w: 280, h: 25 },
+                { x: 100, y: 260, w: 280, h: 25 },
+                { x: 440, y: 260, w: 260, h: 25 }
+            ]},
+            // Hole 5: Maze - multiple walls, tight angles
+            { ball: { x: 100, y: 530 }, hole: { x: 700, y: 200 }, obstacles: [
+                { x: 200, y: 400, w: 25, h: 200 },
+                { x: 200, y: 400, w: 250, h: 25 },
+                { x: 500, y: 180, w: 25, h: 280 },
+                { x: 350, y: 290, w: 150, h: 25 },
+                { x: 100, y: 290, w: 150, h: 25 },
+                { x: 600, y: 380, w: 150, h: 25 }
+            ]}
+        ];
+
+        const golfScoreReactions = [
+            "🤴🏻 Wauw Lindsay! Dat was echt sick! 🤯",
+            "🤴🏻 HOW?! Je bent een golfpro! 😍",
+            "🤴🏻 Tiger Woods wie?? 🔥",
+            "🤴🏻 HOLE IN ONE QUEEN! 👑",
+            "🤴🏻 Ik sta te shaken, wat een shot! 🎯",
+            "🤴🏻 Jij hebt echt talent! 😮",
+            "🤴🏻 Holy shit wat leip! 🤯"
+        ];
+
+        const golfMissReactions = [
+            "🤴🏻 Geeft niks! Kijk... *mist expres* ...zie je, iedereen mist 💦",
+            "🤴🏻 Mijn beurt! *slaat bewust de verkeerde kant op* Oeps? 😏",
+            "🤴🏻 Oké nieuwe regel: winnaar krijgt een kus 😏",
+            "🤴🏻 Kijk maar eens even naar hoe ik het doe: *schiet bal tegen engels koppel* 🏌️",
+            "🤴🏻 Even voordoen hoor... *mikt bewust naast het gat* Jij bent beter! 😎",
+            "🤴🏻 Ik laat je niet winnen hoor, je bent gewoon te goed 🤷"
+        ];
+
+        const GOLF_BALL_RADIUS = 8;
+        const GOLF_HOLE_RADIUS = 16;
+        const GOLF_MIN_POWER = 3;
+        const GOLF_MAX_POWER = 16;
+        const GOLF_MAX_DIST = 300; // distance in canvas px for max power
+        const GOLF_FRICTION = 0.96;
+        let golfMouseX = 400;
+        let golfMouseY = 300;
+
+        function startPhase3() {
+            currentPhase = 3;
+            phase3.style.display = 'block';
+            phase3Ended = false;
+            golfHoleIndex = 0;
+            golfLindsayScore = 0;
+            golfDucoScore = 0;
+            loveMeter = 100;
+            loveFill.style.width = '100%';
+
+            golfCanvas = document.getElementById('golf-canvas');
+            golfCtx = golfCanvas.getContext('2d');
+
+            // Make canvas match display size
+            const rect = gameContainer.getBoundingClientRect();
+            golfCanvas.width = rect.width;
+            golfCanvas.height = rect.height;
+
+            document.getElementById('golf-lindsay-score').textContent = '0';
+            document.getElementById('golf-duco-score').textContent = '0';
+
+            // Show instruction
+            const instruction = phase3.querySelector('.golf-instruction');
+            if (instruction) instruction.style.display = 'block';
+
+            setupGolfHole(0);
+
+            // Mouse/touch aiming and shooting
+            golfCanvas.addEventListener('click', handleGolfClick);
+            golfCanvas.addEventListener('touchend', handleGolfTouchEnd);
+            golfCanvas.addEventListener('mousemove', handleGolfMouseMove);
+            golfCanvas.addEventListener('touchmove', handleGolfTouchMove);
+
+            // Start game loop
+            golfGameLoop();
+
+            // Safety timeout
+            setTimeout(() => { if (currentPhase === 3) endPhase3(); }, 120000);
+        }
+
+        function setupGolfHole(index) {
+            const layout = golfHoleLayouts[index % golfHoleLayouts.length];
+            const scaleX = golfCanvas.width / 800;
+            const scaleY = golfCanvas.height / 600;
+
+            golfBall = {
+                x: layout.ball.x * scaleX,
+                y: layout.ball.y * scaleY,
+                vx: 0,
+                vy: 0
+            };
+            golfHole = {
+                x: layout.hole.x * scaleX,
+                y: layout.hole.y * scaleY
+            };
+            golfObstacles = layout.obstacles.map(o => ({
+                x: o.x * scaleX,
+                y: o.y * scaleY,
+                w: o.w * scaleX,
+                h: o.h * scaleY
+            }));
+
+            golfDucoBall = { x: 0, y: 0, vx: 0, vy: 0, visible: false };
+            golfDucoPos = { x: golfBall.x, y: golfBall.y };
+            golfState = 'AIMING';
+        }
+
+        function golfGameLoop() {
+            if (currentPhase !== 3 || phase3Ended) return;
+            golfUpdate();
+            golfDraw();
+            golfAnimFrame = requestAnimationFrame(golfGameLoop);
+        }
+
+        // Shared ball physics: move, friction, wall bounce, obstacle bounce
+        function applyBallPhysics(ball) {
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+            ball.vx *= GOLF_FRICTION;
+            ball.vy *= GOLF_FRICTION;
+
+            const r = GOLF_BALL_RADIUS;
+            if (ball.x - r < 0) { ball.x = r; ball.vx = Math.abs(ball.vx); }
+            if (ball.x + r > golfCanvas.width) { ball.x = golfCanvas.width - r; ball.vx = -Math.abs(ball.vx); }
+            if (ball.y - r < 0) { ball.y = r; ball.vy = Math.abs(ball.vy); }
+            if (ball.y + r > golfCanvas.height) { ball.y = golfCanvas.height - r; ball.vy = -Math.abs(ball.vy); }
+
+            golfObstacles.forEach(obs => {
+                const closestX = Math.max(obs.x, Math.min(ball.x, obs.x + obs.w));
+                const closestY = Math.max(obs.y, Math.min(ball.y, obs.y + obs.h));
+                const dx = ball.x - closestX;
+                const dy = ball.y - closestY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < r) {
+                    if (dist > 0) {
+                        ball.x += (dx / dist) * (r - dist);
+                        ball.y += (dy / dist) * (r - dist);
+                    }
+                    if (Math.abs(ball.x - closestX) > Math.abs(ball.y - closestY)) {
+                        ball.vx = -ball.vx * 0.8;
+                    } else {
+                        ball.vy = -ball.vy * 0.8;
+                    }
+                }
+            });
+
+            return Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+        }
+
+        function ballSpeed(ball) {
+            return Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+        }
+
+        function golfUpdate() {
+            // AIMING: waiting for Lindsay's click
+            if (golfState === 'AIMING') {
+                // nothing to update
+            }
+
+            // LINDSAY_ROLLING: Lindsay's ball is moving
+            if (golfState === 'LINDSAY_ROLLING') {
+                const speed = applyBallPhysics(golfBall);
+
+                // Check if ball entered hole
+                const hdx = golfBall.x - golfHole.x;
+                const hdy = golfBall.y - golfHole.y;
+                const holeDist = Math.sqrt(hdx * hdx + hdy * hdy);
+
+                if (holeDist < GOLF_HOLE_RADIUS && speed < 6) {
+                    golfBall.vx = 0;
+                    golfBall.vy = 0;
+                    golfBall.x = golfHole.x;
+                    golfBall.y = golfHole.y;
+                    golfState = 'RESULT';
+                    showGolfResult(true);
+                    return;
+                }
+
+                // Ball stopped → Duco's turn
+                if (speed < 0.3) {
+                    golfBall.vx = 0;
+                    golfBall.vy = 0;
+                    // Fire Duco's ball from his last position in a random direction
+                    const randAngle = Math.random() * Math.PI * 2;
+                    golfDucoBall = {
+                        x: golfDucoPos.x,
+                        y: golfDucoPos.y,
+                        vx: Math.cos(randAngle) * (GOLF_MIN_POWER + Math.random() * (GOLF_MAX_POWER - GOLF_MIN_POWER)),
+                        vy: Math.sin(randAngle) * (GOLF_MIN_POWER + Math.random() * (GOLF_MAX_POWER - GOLF_MIN_POWER)),
+                        visible: true
+                    };
+                    golfState = 'DUCO_ROLLING';
+                    playSound('hit');
+
+                    // Show a miss reaction
+                    const reactionEl = document.getElementById('golf-reaction');
+                    const reaction = golfMissReactions[Math.floor(Math.random() * golfMissReactions.length)];
+                    reactionEl.textContent = reaction;
+                    reactionEl.className = '';
+                    reactionEl.classList.add('show');
+                    setTimeout(() => {
+                        reactionEl.classList.remove('show');
+                        reactionEl.classList.add('hide');
+                        setTimeout(() => reactionEl.classList.remove('hide'), 400);
+                    }, 1500);
+                }
+            }
+
+            // DUCO_ROLLING: Duco's ball is moving with same physics
+            if (golfState === 'DUCO_ROLLING') {
+                const speed = applyBallPhysics(golfDucoBall);
+
+                // Check if Duco accidentally scored
+                const dhdx = golfDucoBall.x - golfHole.x;
+                const dhdy = golfDucoBall.y - golfHole.y;
+                const dholeDist = Math.sqrt(dhdx * dhdx + dhdy * dhdy);
+                if (dholeDist < GOLF_HOLE_RADIUS && speed < 6) {
+                    golfDucoBall.vx = 0;
+                    golfDucoBall.vy = 0;
+                    golfDucoBall.x = golfHole.x;
+                    golfDucoBall.y = golfHole.y;
+                    golfDucoPos = { x: golfDucoBall.x, y: golfDucoBall.y };
+                    golfDucoBall.visible = false;
+                    golfState = 'AIMING';
+                    playSound('bad');
+                    screenShake();
+                    // Oops reaction
+                    const reactionEl = document.getElementById('golf-reaction');
+                    reactionEl.textContent = '🤴🏻 Shit... Ik bedoel... dat was expres! 😅';
+                    reactionEl.className = '';
+                    reactionEl.classList.add('show');
+                    setTimeout(() => {
+                        reactionEl.classList.remove('show');
+                        reactionEl.classList.add('hide');
+                        setTimeout(() => reactionEl.classList.remove('hide'), 400);
+                    }, 2000);
+                    // Reset Duco to ball start for this hole
+                    const layout = golfHoleLayouts[golfHoleIndex % golfHoleLayouts.length];
+                    const scaleX = golfCanvas.width / 800;
+                    const scaleY = golfCanvas.height / 600;
+                    golfDucoPos = { x: layout.ball.x * scaleX, y: layout.ball.y * scaleY };
+                    return;
+                }
+
+                // When Duco's ball stops → back to Lindsay's turn
+                if (speed < 0.3) {
+                    golfDucoBall.vx = 0;
+                    golfDucoBall.vy = 0;
+                    // Save Duco's resting position for next shot
+                    golfDucoPos = { x: golfDucoBall.x, y: golfDucoBall.y };
+                    golfDucoBall.visible = false;
+                    golfState = 'AIMING';
+                    updateLoveMeter(8); // miss is still endearing
+                }
+            }
+        }
+
+        function drawBall(ctx, ball, fillColor, strokeColor) {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, GOLF_BALL_RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        function drawTropicalFlower(ctx, x, y, size, color) {
+            for (let i = 0; i < 5; i++) {
+                const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                ctx.beginPath();
+                ctx.arc(x + Math.cos(angle) * size, y + Math.sin(angle) * size, size * 0.55, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+            }
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.35, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFD700';
+            ctx.fill();
+        }
+
+        function drawPalmSilhouette(ctx, x, groundY, scale) {
+            const s = scale;
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(x - 3 * s, groundY - 45 * s, 6 * s, 45 * s);
+            ctx.fillStyle = 'rgba(0,40,0,0.35)';
+            [-2.2,-1.5,-0.8,-0.2,0.2,0.8,1.5,2.2].forEach(a => {
+                ctx.beginPath();
+                ctx.moveTo(x, groundY - 45 * s);
+                const ex = x + Math.cos(a) * 35 * s;
+                const ey = groundY - 45 * s + Math.sin(a) * 20 * s;
+                const cpx = x + Math.cos(a) * 18 * s;
+                const cpy = groundY - 45 * s + Math.sin(a) * 8 * s - 12 * s;
+                ctx.quadraticCurveTo(cpx, cpy, ex, ey);
+                ctx.lineTo(ex + 1, ey + 2);
+                ctx.quadraticCurveTo(cpx + 1, cpy + 4, x, groundY - 45 * s);
+                ctx.fill();
+            });
+        }
+
+        function drawTikiTorch(ctx, x, y, time) {
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(x - 2, y - 12, 4, 24);
+            ctx.fillStyle = '#6B5335';
+            ctx.fillRect(x - 2, y - 4, 4, 2);
+            ctx.fillRect(x - 2, y + 6, 4, 2);
+            ctx.fillStyle = '#5a3a1a';
+            ctx.fillRect(x - 4, y - 16, 8, 5);
+            const fl = Math.sin(time * 8 + x + y) * 1.5;
+            ctx.beginPath();
+            ctx.arc(x + fl * 0.5, y - 20, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#FF6B35';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + fl * 0.3, y - 21, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFD700';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x, y - 21, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFFACD';
+            ctx.fill();
+        }
+
+        function golfDraw() {
+            const ctx = golfCtx;
+            const w = golfCanvas.width;
+            const h = golfCanvas.height;
+            const time = Date.now() * 0.003;
+
+            // === OCEAN/SUNSET HORIZON (top ~12%) ===
+            const skyH = Math.round(h * 0.12);
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, skyH);
+            skyGrad.addColorStop(0, '#ff7043');
+            skyGrad.addColorStop(0.3, '#ff9a76');
+            skyGrad.addColorStop(0.6, '#ffcc80');
+            skyGrad.addColorStop(0.85, '#88ccaa');
+            skyGrad.addColorStop(1, '#228833');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, w, skyH);
+
+            // Ocean waves
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 1;
+            for (let wy = 4; wy < skyH * 0.5; wy += 7) {
+                ctx.beginPath();
+                for (let wx = 0; wx < w; wx += 3) {
+                    const waveY = wy + Math.sin(wx * 0.04 + time * 2 + wy * 0.5) * 2;
+                    if (wx === 0) ctx.moveTo(wx, waveY); else ctx.lineTo(wx, waveY);
+                }
+                ctx.stroke();
+            }
+
+            // Sun with glow
+            const sunX = w * 0.82, sunY = skyH * 0.35, sunR = skyH * 0.22;
+            const sunGlow = ctx.createRadialGradient(sunX, sunY, sunR * 0.5, sunX, sunY, sunR * 3);
+            sunGlow.addColorStop(0, 'rgba(255, 220, 80, 0.5)');
+            sunGlow.addColorStop(1, 'rgba(255, 150, 50, 0)');
+            ctx.fillStyle = sunGlow;
+            ctx.fillRect(sunX - sunR * 4, 0, sunR * 8, skyH);
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFD700';
+            ctx.fill();
+
+            // Palm tree silhouettes against sky
+            drawPalmSilhouette(ctx, w * 0.05, skyH, 0.7);
+            drawPalmSilhouette(ctx, w * 0.95, skyH, 0.8);
+            drawPalmSilhouette(ctx, w * 0.15, skyH, 0.5);
+            drawPalmSilhouette(ctx, w * 0.88, skyH, 0.55);
+
+            // === LUSH TROPICAL GRASS ===
+            ctx.fillStyle = '#1a8a2a';
+            ctx.fillRect(0, skyH, w, h - skyH);
+
+            // Grass checkerboard
+            for (let gx = 0; gx < w; gx += 22) {
+                for (let gy = Math.floor(skyH / 22) * 22; gy < h; gy += 22) {
+                    ctx.fillStyle = ((gx / 22 + gy / 22) % 2 === 0) ? '#1d9130' : '#188528';
+                    ctx.fillRect(gx, Math.max(gy, skyH), 22, 22);
+                }
+            }
+
+            // Grass blade highlights
+            ctx.fillStyle = 'rgba(50, 200, 60, 0.15)';
+            for (let gx = 8; gx < w; gx += 30) {
+                for (let gy = skyH + 8; gy < h; gy += 25) {
+                    ctx.fillRect(gx, gy, 8, 2);
+                }
+            }
+
+            // === SCATTERED TROPICAL FLOWERS ===
+            const fColors = ['#FF69B4','#FF1493','#FFD700','#FF6347','#FF69B4','#FF4500','#FFD700','#FF1493'];
+            [
+                [0.04,0.22],[0.10,0.52],[0.06,0.82],[0.93,0.32],[0.96,0.62],[0.90,0.88],
+                [0.25,0.16],[0.60,0.14],[0.48,0.93],[0.14,0.68],[0.86,0.72],[0.42,0.48],
+                [0.72,0.38],[0.20,0.38],[0.66,0.82],[0.35,0.70],[0.78,0.58],[0.55,0.25]
+            ].forEach(([fx, fy], i) => {
+                drawTropicalFlower(ctx, fx * w, fy * h, 3 + (i % 3) * 1.5, fColors[i % fColors.length]);
+            });
+
+            // === BAMBOO BORDER ===
+            const bw = 7;
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(0, 0, w, bw);
+            ctx.fillRect(0, h - bw, w, bw);
+            ctx.fillRect(0, 0, bw, h);
+            ctx.fillRect(w - bw, 0, bw, h);
+            // Bamboo nodes
+            ctx.fillStyle = '#6B5335';
+            for (let bx = 0; bx < w; bx += 35) { ctx.fillRect(bx, 0, 3, bw); ctx.fillRect(bx, h - bw, 3, bw); }
+            for (let by = 0; by < h; by += 35) { ctx.fillRect(0, by, bw, 3); ctx.fillRect(w - bw, by, bw, 3); }
+            // Highlight
+            ctx.fillStyle = 'rgba(255,255,200,0.12)';
+            ctx.fillRect(0, 1, w, 2); ctx.fillRect(1, 0, 2, h);
+            // Inner shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.fillRect(bw, bw, w - bw * 2, 2); ctx.fillRect(bw, bw, 2, h - bw * 2);
+
+            // === TIKI TORCHES along border ===
+            [h * 0.25, h * 0.5, h * 0.75].forEach(ty => {
+                drawTikiTorch(ctx, bw + 8, ty, time);
+                drawTikiTorch(ctx, w - bw - 8, ty, time);
+            });
+
+            // === OBSTACLES (tiki volcanic rock) ===
+            golfObstacles.forEach(obs => {
+                // Shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.fillRect(obs.x + 3, obs.y + 3, obs.w, obs.h);
+                // Rock body gradient
+                const rg = ctx.createLinearGradient(obs.x, obs.y, obs.x, obs.y + obs.h);
+                rg.addColorStop(0, '#5a4030');
+                rg.addColorStop(0.5, '#3a2818');
+                rg.addColorStop(1, '#2a1a0a');
+                ctx.fillStyle = rg;
+                ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                // Tiki face on larger obstacles
+                const minDim = Math.min(obs.w, obs.h);
+                if (minDim >= 20) {
+                    const ocx = obs.x + obs.w / 2, ocy = obs.y + obs.h / 2;
+                    ctx.fillStyle = '#FFD700';
+                    ctx.globalAlpha = 0.45;
+                    if (obs.w >= obs.h) {
+                        ctx.fillRect(ocx - 8, ocy - 3, 4, 4);
+                        ctx.fillRect(ocx + 4, ocy - 3, 4, 4);
+                        ctx.fillRect(ocx - 5, ocy + 3, 10, 2);
+                    } else {
+                        ctx.fillRect(ocx - 5, ocy - 10, 3, 3);
+                        ctx.fillRect(ocx + 2, ocy - 10, 3, 3);
+                        ctx.fillRect(ocx - 4, ocy - 5, 8, 2);
+                    }
+                    ctx.globalAlpha = 1.0;
+                }
+                // Edge & highlight
+                ctx.strokeStyle = '#6a5040';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+                ctx.fillStyle = 'rgba(255,255,200,0.08)';
+                ctx.fillRect(obs.x, obs.y, obs.w, 2);
+            });
+
+            // === HOLE (tiki styled) ===
+            ctx.beginPath();
+            ctx.arc(golfHole.x + 2, golfHole.y + 2, GOLF_HOLE_RADIUS + 2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(golfHole.x, golfHole.y, GOLF_HOLE_RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fill();
+            ctx.strokeStyle = '#8B7355';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            // Bamboo flagpole
+            ctx.beginPath();
+            ctx.moveTo(golfHole.x, golfHole.y);
+            ctx.lineTo(golfHole.x, golfHole.y - 40);
+            ctx.strokeStyle = '#8B7355';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            // Hibiscus flag
+            ctx.beginPath();
+            ctx.moveTo(golfHole.x + 1, golfHole.y - 40);
+            ctx.lineTo(golfHole.x + 22, golfHole.y - 32);
+            ctx.lineTo(golfHole.x + 1, golfHole.y - 24);
+            ctx.fillStyle = '#FF1493';
+            ctx.fill();
+            drawTropicalFlower(ctx, golfHole.x + 11, golfHole.y - 32, 3, '#FFD700');
+
+            // === LINDSAY'S BALL (pink tropical) ===
+            drawBall(ctx, golfBall, '#FFB6C1', '#FF69B4');
+            ctx.beginPath();
+            ctx.arc(golfBall.x - 2, golfBall.y - 2, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.fill();
+            drawTropicalFlower(ctx, golfBall.x + 1, golfBall.y - 1, 1.5, '#FF1493');
+
+            // === DUCO'S BALL (tropical blue) ===
+            if (golfDucoBall.visible) {
+                drawBall(ctx, golfDucoBall, '#66ccff', '#3399dd');
+                ctx.font = '10px "Press Start 2P"';
+                ctx.fillStyle = '#66ccff';
+                ctx.textAlign = 'center';
+                ctx.fillText('🤴🏻', golfDucoBall.x, golfDucoBall.y - 14);
+            } else {
+                drawBall(ctx, golfDucoPos, '#66ccff', '#3399dd');
+                ctx.font = '10px "Press Start 2P"';
+                ctx.fillStyle = '#66ccff';
+                ctx.textAlign = 'center';
+                ctx.fillText('🤴🏻', golfDucoPos.x, golfDucoPos.y - 14);
+            }
+
+            // === AIM ARROW ===
+            if (golfState === 'AIMING') {
+                const aimDx = golfMouseX - golfBall.x;
+                const aimDy = golfMouseY - golfBall.y;
+                const aimDist = Math.sqrt(aimDx * aimDx + aimDy * aimDy);
+                const aimAngle = Math.atan2(aimDy, aimDx);
+                const powerFrac = Math.min(aimDist / GOLF_MAX_DIST, 1);
+                const arrowLen = 20 + powerFrac * 60;
+                const lineWidth = 2 + powerFrac * 3;
+
+                const ax = golfBall.x + Math.cos(aimAngle) * arrowLen;
+                const ay = golfBall.y + Math.sin(aimAngle) * arrowLen;
+
+                const r = Math.floor(255 * Math.min(powerFrac * 2, 1));
+                const g = Math.floor(255 * Math.min((1 - powerFrac) * 2, 1));
+                const arrowColor = `rgb(${r},${g},60)`;
+
+                ctx.beginPath();
+                ctx.moveTo(golfBall.x, golfBall.y);
+                ctx.lineTo(ax, ay);
+                ctx.strokeStyle = arrowColor;
+                ctx.lineWidth = lineWidth;
+                ctx.stroke();
+
+                const headLen = 8 + powerFrac * 8;
+                const headAngle = 0.4;
+                ctx.beginPath();
+                ctx.moveTo(ax, ay);
+                ctx.lineTo(ax - headLen * Math.cos(aimAngle - headAngle), ay - headLen * Math.sin(aimAngle - headAngle));
+                ctx.moveTo(ax, ay);
+                ctx.lineTo(ax - headLen * Math.cos(aimAngle + headAngle), ay - headLen * Math.sin(aimAngle + headAngle));
+                ctx.strokeStyle = arrowColor;
+                ctx.lineWidth = lineWidth;
+                ctx.stroke();
+
+                // Tiki-styled power bar
+                const barW = 40, barH = 6;
+                const barX = golfBall.x - barW / 2;
+                const barY = golfBall.y + GOLF_BALL_RADIUS + 8;
+                ctx.fillStyle = 'rgba(58, 37, 16, 0.7)';
+                ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+                ctx.fillStyle = arrowColor;
+                ctx.fillRect(barX, barY, barW * powerFrac, barH);
+                ctx.strokeStyle = '#8B7355';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(barX - 1, barY - 1, barW + 2, barH + 2);
+            }
+
+            // === HUD ===
+            ctx.font = '14px "Press Start 2P"';
+            ctx.fillStyle = 'rgba(255,215,0,0.5)';
+            ctx.textAlign = 'left';
+            ctx.fillText('\u{1F334} Hole ' + (golfHoleIndex + 1) + '/5', 15, 105); // "Hole" is universal golf term
+
+            ctx.font = '10px "Press Start 2P"';
+            ctx.textAlign = 'left';
+            if (golfState === 'AIMING' || golfState === 'LINDSAY_ROLLING') {
+                ctx.fillStyle = '#ff69b4';
+                ctx.fillText('\u{1F33A} Lindsay aan de beurt \u{1F478}\u{1F3FB}', 15, 125);
+            } else if (golfState === 'DUCO_ROLLING') {
+                ctx.fillStyle = '#66ccff';
+                ctx.fillText('\u{1F30A} Duco aan de beurt \u{1F934}\u{1F3FB}', 15, 125);
+            }
+        }
+
+        function handleGolfMouseMove(e) {
+            const rect = golfCanvas.getBoundingClientRect();
+            golfMouseX = (e.clientX - rect.left) * (golfCanvas.width / rect.width);
+            golfMouseY = (e.clientY - rect.top) * (golfCanvas.height / rect.height);
+        }
+
+        function handleGolfTouchMove(e) {
+            e.preventDefault();
+            const rect = golfCanvas.getBoundingClientRect();
+            golfMouseX = (e.touches[0].clientX - rect.left) * (golfCanvas.width / rect.width);
+            golfMouseY = (e.touches[0].clientY - rect.top) * (golfCanvas.height / rect.height);
+        }
+
+        function handleGolfClick(e) {
+            if (currentPhase !== 3 || golfState !== 'AIMING') return;
+
+            const rect = golfCanvas.getBoundingClientRect();
+            const clickX = (e.clientX - rect.left) * (golfCanvas.width / rect.width);
+            const clickY = (e.clientY - rect.top) * (golfCanvas.height / rect.height);
+
+            const dx = clickX - golfBall.x;
+            const dy = clickY - golfBall.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx);
+            const power = GOLF_MIN_POWER + (GOLF_MAX_POWER - GOLF_MIN_POWER) * Math.min(dist / GOLF_MAX_DIST, 1);
+
+            golfBall.vx = Math.cos(angle) * power;
+            golfBall.vy = Math.sin(angle) * power;
+
+            golfState = 'LINDSAY_ROLLING';
+            playSound('hit');
+
+            const instruction = phase3.querySelector('.golf-instruction');
+            if (instruction) instruction.style.display = 'none';
+        }
+
+        function handleGolfTouchEnd(e) {
+            e.preventDefault();
+            const rect = golfCanvas.getBoundingClientRect();
+            handleGolfClick({
+                clientX: golfMouseX / (golfCanvas.width / rect.width) + rect.left,
+                clientY: golfMouseY / (golfCanvas.height / rect.height) + rect.top
+            });
+        }
+
+        function showGolfResult(scored) {
+            const reactionEl = document.getElementById('golf-reaction');
+
+            golfLindsayScore++;
+            document.getElementById('golf-lindsay-score').textContent = golfLindsayScore;
+            updateLoveMeter(20);
+            updateScore(150, golfCanvas.width / 2, golfCanvas.height / 2, true);
+            playSound('bonus');
+            createParticles(golfBall.x, golfBall.y, '#ffd700', 12);
+
+            const reaction = golfScoreReactions[Math.floor(Math.random() * golfScoreReactions.length)];
+            reactionEl.textContent = reaction;
+
+            reactionEl.className = '';
+            reactionEl.classList.add('show');
+
+            // Check if Lindsay reached 5 points → end phase
+            if (golfLindsayScore >= 5) {
+                setTimeout(() => {
+                    reactionEl.classList.remove('show');
+                    reactionEl.classList.add('hide');
+                    setTimeout(() => {
+                        reactionEl.classList.remove('hide');
+                        endPhase3();
+                    }, 500);
+                }, 2000);
+                return;
+            }
+
+            // After reaction, advance to next hole
+            setTimeout(() => {
+                reactionEl.classList.remove('show');
+                reactionEl.classList.add('hide');
+
+                setTimeout(() => {
+                    reactionEl.classList.remove('hide');
+
+                    golfHoleIndex++;
+                    if (golfHoleIndex >= golfHoleLayouts.length) {
+                        golfHoleIndex = 0;
+                    }
+                    setupGolfHole(golfHoleIndex);
+                }, 500);
+            }, 2000);
+        }
+
+        function endPhase3() {
+            if (phase3Ended) return;
+            phase3Ended = true;
+            currentPhase = 0;
+            if (golfAnimFrame) cancelAnimationFrame(golfAnimFrame);
+            if (loveDrainInterval) clearInterval(loveDrainInterval);
+            if (golfCanvas) {
+                golfCanvas.removeEventListener('click', handleGolfClick);
+                golfCanvas.removeEventListener('touchend', handleGolfTouchEnd);
+                golfCanvas.removeEventListener('mousemove', handleGolfMouseMove);
+                golfCanvas.removeEventListener('touchmove', handleGolfTouchMove);
+            }
+            phase3.style.display = 'none';
+            showFinale();
+        }
+        
+        // ============ GRAND FINALE ============
+        function showFinale() {
+            currentPhase = 4;
+            hud.classList.add('hidden');
+            finale.style.display = 'flex';
+            stopBgMusic();
+
+            playSound('finale');
+            
+            document.getElementById('final-score').textContent = score;
+            
+            // Reveal lines one by one
+            const lines = finale.querySelectorAll('.love-letter .line');
+            lines.forEach((line, i) => {
+                setTimeout(() => {
+                    line.classList.add('visible');
+                }, 1000 + i * 1500);
+            });
+            
+            // Fireworks!
+            const fireworkInterval = setInterval(createFirework, 400);
+            setTimeout(() => clearInterval(fireworkInterval), 15000);
+        }
+        
+        function createFirework(targetEl) {
+            const target = targetEl || finale;
+            const x = Math.random() * 700 + 50;
+            const y = Math.random() * 300 + 50;
+            const color = `hsl(${Math.random() * 60 + 320}, 100%, 60%)`;
+
+            const container = document.createElement('div');
+            container.className = 'firework';
+            container.style.left = x + 'px';
+            container.style.top = y + 'px';
+
+            for (let i = 0; i < 12; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'firework-particle';
+                particle.style.background = color;
+
+                const angle = (Math.PI * 2 / 12) * i;
+                const distance = 40 + Math.random() * 60;
+                particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+
+                container.appendChild(particle);
+            }
+
+            target.appendChild(container);
+            setTimeout(() => container.remove(), 1000);
+        }
+        
+        // Set up audio unlock listeners on page load (iOS Safari requirement)
+        // Don't create AudioContext here — defer to first user gesture
+        document.addEventListener('DOMContentLoaded', function() {
+            setupAudioUnlockListeners();
+        });
+    </script>
+</body>
+</html>
