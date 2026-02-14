@@ -623,17 +623,30 @@
         }
         
         .finale-message .love-letter {
-            font-family: 'Dancing Script', cursive;
-            font-size: 22px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 20px;
             color: #ffd1dc;
-            line-height: 1.5;
-            max-width: 500px;
+            line-height: 1.7;
+            max-width: 680px;
             margin: 0 auto;
+            text-align: left;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 10px 20px;
         }
-        
+
         .finale-message .love-letter .line {
             opacity: 0;
             transform: translateY(20px);
+            margin-bottom: 12px;
+        }
+
+        .finale-message .love-letter .line.finale-question {
+            text-align: center;
+            font-size: 26px;
+            color: #ff69b4;
+            font-weight: 700;
+            margin-top: 12px;
         }
         
         .finale-message .love-letter .line.visible {
@@ -1126,6 +1139,48 @@
             opacity: 1;
         }
 
+        .intro-hint {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            color: #aaccff;
+            margin-top: 10px;
+            opacity: 0.7;
+            transition: color 0.3s, opacity 0.3s;
+        }
+
+        .intro-hint-extra {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 9px;
+            color: #ff69b4;
+            margin-top: 8px;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity 0.4s, max-height 0.4s;
+        }
+
+        .intro-hint-extra.visible {
+            opacity: 1;
+            max-height: 40px;
+        }
+
+        .intro-device-note {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: #ffcc00;
+            margin-top: 25px;
+            padding: 10px 18px;
+            border: 2px solid #ffcc00;
+            border-radius: 8px;
+            background: rgba(255, 204, 0, 0.1);
+            animation: deviceNotePulse 2s infinite;
+        }
+
+        @keyframes deviceNotePulse {
+            0%, 100% { opacity: 0.8; border-color: #ffcc00; }
+            50% { opacity: 1; border-color: #ffee66; box-shadow: 0 0 12px rgba(255, 204, 0, 0.4); }
+        }
+
         .intro-input.shake {
             animation: introShake 0.4s;
             border-color: #ff4466;
@@ -1220,6 +1275,9 @@
             <button class="intro-submit" onclick="checkIntroPassword()">GO</button>
         </div>
         <p class="intro-error" id="intro-error">Verkeerde code... probeer opnieuw</p>
+        <p class="intro-hint" id="intro-hint">Hint: locatie van onze eerste date</p>
+        <p class="intro-hint-extra" id="intro-hint-extra">Nee, onze andere eerste date!</p>
+        <p class="intro-device-note">Speel dit op een laptop!</p>
     </div>
 
     <!-- Intro: Time Travel Animation -->
@@ -1297,11 +1355,12 @@
             <div class="finale-message">
                 <h1>🎉 JE HEBT HET GEHAALD! 🎉</h1>
                 <div class="love-letter">
-                    <div class="line">Lindsay, je bent echt geweldig! ✨</div>
-                    <div class="line">Elk moment met jou is een cadeautje 🎁</div>
-                    <div class="line">Je maakt mijn wereld elke dag mooier 🌟</div>
-                    <div class="line">Ik hou meer van je dan woorden kunnen zeggen 💕</div>
-                    <div class="line">Fijne Valentijnsdag, mijn liefde! 💝</div>
+                    <div class="line">Aller liefste schatje,</div>
+                    <div class="line">Wat ben ik trots op jou, gewoon een game helemaal uitgespeeld?! En dan ook nog eens mijn eigen game? Een vrouw met vele talenten, yoga, multimodal data analyze, minigolf en nu ook nog eens een gamer!</div>
+                    <div class="line">Ik hoop dat je het leuk vond om de afgelopen 6 maanden op deze manier te herbeleven. Ik kijk namelijk echt met een grote glimlach en een bonkend hart terug naar alles wat we al samen hebben meegemaakt: Feestjes waarop we de hele avond samen op de bank zitten, festivals en dansen onder DJ tafels. Motor ritjes naar Alkmaar, Leiden en de bosjes van Monnickendam, paper discussies, booty trainen, spa sessies of samen burgerlijke series kijken. Ik vind elk moment met jou leuk, ongeacht de bezigheid, en nu ik niet bij jou kan zijn mis ik dat heel erg. Ik kan niet wachten tot ik je weer zie en ik je weer kan optillen en mee naar huis kan nemen.</div>
+                    <div class="line">Ik houd zoveel van jou. Je bent het perfecte vriendinnetje, en ik heb heel veel zin in alles wat we samen nog gaan meemaken.</div>
+                    <div class="line">Voordat ik deze brief afmaak, rest er mij nog een ding om te vragen:</div>
+                    <div class="line finale-question">Lieve Lindsay, wil jij mijn valentijn zijn?</div>
                 </div>
                 <div class="finale-heart">💖</div>
                 <div class="final-score">EINDSCORE: <span id="final-score">0</span></div>
@@ -1334,7 +1393,7 @@
     <script>
         // ============ INTRO: PASSWORD GATE + TIME TRAVEL ============
         // SHA-256 hash of the password (placeholder - update later)
-        const PASSWORD_HASH = '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08'; // "test"
+        const PASSWORD_HASH = '0206a97843b1ba4fbb147d472550ec3b5ee8aacadf3707522157240940d1bebd'; // "aloha"
 
         let introActive = true;
 
@@ -1610,7 +1669,9 @@
         async function checkIntroPassword() {
             const input = document.getElementById('intro-password');
             const error = document.getElementById('intro-error');
-            const hash = await sha256(input.value.trim().toLowerCase());
+            const hint = document.getElementById('intro-hint');
+            const val = input.value.trim().toLowerCase();
+            const hash = await sha256(val);
 
             if (hash === PASSWORD_HASH) {
                 error.classList.remove('visible');
@@ -1618,6 +1679,11 @@
             } else {
                 input.classList.add('shake');
                 error.classList.add('visible');
+                // Check for AI-builders-like guesses
+                const normalized = val.replace(/[\s\-_]/g, '');
+                if (normalized.includes('aibuilder')) {
+                    document.getElementById('intro-hint-extra').classList.add('visible');
+                }
                 setTimeout(() => input.classList.remove('shake'), 400);
                 input.value = '';
                 input.focus();
@@ -1664,6 +1730,18 @@
             initAudio();
             if (!audioCtx) return;
             if (introMusicInterval) return; // already playing
+
+            // Don't start the beat loop until the AudioContext is actually running.
+            // Otherwise oscillators pile up at currentTime=0 and all fire at once on resume.
+            if (audioCtx.state === 'suspended' || audioCtx.state === 'interrupted') {
+                audioCtx.resume().then(() => {
+                    if (!introMusicInterval && introActive) {
+                        startIntroMusic(); // retry now that context is running
+                    }
+                }).catch(() => {});
+                return;
+            }
+            if (audioCtx.state !== 'running') return;
 
             const bpm = 140;
             const beatMs = (60 / bpm) * 1000;
@@ -2261,41 +2339,151 @@
             const beat = 60 / BPM;
             const bar = beat * 4;
 
-            // Upbeat romantic progression: I - V - vi - IV in C major
-            const chords = [
-                [261.6, 329.6, 392.0],   // C major
-                [392.0, 493.9, 587.3],   // G major
-                [220.0, 261.6, 329.6],   // Am
-                [349.2, 440.0, 523.3],   // F major
-            ];
+            // Note frequencies
+            const N = {
+                C4:261.6, D4:293.7, E4:329.6, F4:349.2, G4:392.0, A4:440.0, B4:493.9,
+                C5:523.3, D5:587.3, E5:659.3, F5:698.5, G5:784.0, A5:880.0, B5:987.8,
+                C6:1046.5
+            };
 
-            // Catchy melody (notes per bar, 8th note rhythm)
-            const melodyBars = [
-                [523.3, 587.3, 659.3, 587.3, 523.3, 659.3, 784.0, 659.3],  // C5 D5 E5 D5 C5 E5 G5 E5
-                [784.0, 880.0, 784.0, 659.3, 587.3, 523.3, 587.3, 659.3],  // G5 A5 G5 E5 D5 C5 D5 E5
-                [440.0, 523.3, 587.3, 659.3, 587.3, 523.3, 440.0, 523.3],  // A4 C5 D5 E5 D5 C5 A4 C5
-                [349.2, 440.0, 523.3, 659.3, 784.0, 659.3, 523.3, 440.0],  // F4 A4 C5 E5 G5 E5 C5 A4
+            // 48 bars total (~51 seconds) before looping
+            // 12 sections of 4 bars, each with its own chord progression, melody, bass, and feel
+
+            const sections = [
+                // === SECTION A: Bright opening (I-V-vi-IV) ===
+                { chords: [[N.C4,N.E4,N.G4],[N.G4,N.B4,N.D5],[N.A4,N.C5,N.E5],[N.F4,N.A4,N.C5]],
+                  melody: [
+                    [N.C5,N.E5,N.G5,N.E5,N.C5,N.E5,N.G5,N.E5],
+                    [N.G5,N.A5,N.G5,N.E5,N.D5,N.C5,N.D5,N.E5],
+                    [N.A4,N.C5,N.E5,N.G5,N.E5,N.C5,N.A4,N.C5],
+                    [N.F4,N.A4,N.C5,N.E5,N.G5,N.E5,N.C5,N.A4]],
+                  bass: [1,1.5,1,2], chordWave:'square', melWave:'triangle', hatOff:true, kick:true },
+
+                // === SECTION B: Melodic rise (vi-IV-I-V) ===
+                { chords: [[N.A4,N.C5,N.E5],[N.F4,N.A4,N.C5],[N.C4,N.E4,N.G4],[N.G4,N.B4,N.D5]],
+                  melody: [
+                    [N.E5,N.D5,N.C5,N.D5,N.E5,N.G5,N.A5,N.G5],
+                    [N.C5,N.D5,N.E5,N.F5,N.E5,N.D5,N.C5,N.D5],
+                    [N.G5,N.E5,N.C5,N.D5,N.E5,N.G5,N.E5,N.C5],
+                    [N.D5,N.E5,N.G5,N.A5,N.G5,N.E5,N.D5,N.C5]],
+                  bass: [1,1,1.5,0.75], chordWave:'triangle', melWave:'triangle', hatOff:true, kick:true },
+
+                // === SECTION C: Driving energy (I-vi-ii-V) ===
+                { chords: [[N.C4,N.E4,N.G4],[N.A4,N.C5,N.E5],[N.D4,N.F4,N.A4],[N.G4,N.B4,N.D5]],
+                  melody: [
+                    [N.G5,N.G5,N.E5,N.C5,N.D5,N.E5,N.G5,N.A5],
+                    [N.A5,N.G5,N.E5,N.C5,N.E5,N.G5,N.E5,N.C5],
+                    [N.D5,N.F5,N.A5,N.G5,N.F5,N.D5,N.C5,N.D5],
+                    [N.G5,N.A5,N.B5,N.A5,N.G5,N.E5,N.D5,N.E5]],
+                  bass: [1,2,1.5,1], chordWave:'square', melWave:'square', hatOff:false, kick:true },
+
+                // === SECTION D: Gentle bridge (IV-V-iii-vi) ===
+                { chords: [[N.F4,N.A4,N.C5],[N.G4,N.B4,N.D5],[N.E4,N.G4,N.B4],[N.A4,N.C5,N.E5]],
+                  melody: [
+                    [N.C5,N.D5,N.E5,N.D5,N.C5,0,N.C5,N.D5],
+                    [N.D5,N.E5,N.G5,N.E5,N.D5,0,N.D5,N.E5],
+                    [N.E5,N.D5,N.C5,N.B4,N.C5,0,N.E5,N.D5],
+                    [N.C5,N.E5,N.A5,N.G5,N.E5,0,N.C5,N.E5]],
+                  bass: [1,0.75,1,1.5], chordWave:'triangle', melWave:'triangle', hatOff:true, kick:false },
+
+                // === SECTION E: High energy climb (I-V-vi-IV, octave up) ===
+                { chords: [[N.C5,N.E5,N.G5],[N.G4,N.B4,N.D5],[N.A4,N.C5,N.E5],[N.F4,N.A4,N.C5]],
+                  melody: [
+                    [N.C6,N.B5,N.A5,N.G5,N.A5,N.B5,N.C6,N.B5],
+                    [N.G5,N.A5,N.B5,N.C6,N.B5,N.A5,N.G5,N.A5],
+                    [N.A5,N.C6,N.A5,N.G5,N.E5,N.G5,N.A5,N.C6],
+                    [N.G5,N.E5,N.C5,N.E5,N.G5,N.A5,N.G5,N.E5]],
+                  bass: [1,1.5,2,1], chordWave:'square', melWave:'triangle', hatOff:false, kick:true },
+
+                // === SECTION F: Triumphant (IV-I-V-vi) ===
+                { chords: [[N.F4,N.A4,N.C5],[N.C4,N.E4,N.G4],[N.G4,N.B4,N.D5],[N.A4,N.C5,N.E5]],
+                  melody: [
+                    [N.A5,N.G5,N.A5,N.C6,N.A5,N.G5,N.E5,N.G5],
+                    [N.E5,N.G5,N.C6,N.G5,N.E5,N.C5,N.E5,N.G5],
+                    [N.G5,N.B5,N.G5,N.D5,N.G5,N.B5,N.A5,N.G5],
+                    [N.A5,N.E5,N.A5,N.C6,N.B5,N.A5,N.G5,N.E5]],
+                  bass: [1,2,1,1.5], chordWave:'square', melWave:'triangle', hatOff:false, kick:true },
+
+                // === SECTION G: Tender moment (vi-iii-IV-I) ===
+                { chords: [[N.A4,N.C5,N.E5],[N.E4,N.G4,N.B4],[N.F4,N.A4,N.C5],[N.C4,N.E4,N.G4]],
+                  melody: [
+                    [N.E5,N.C5,N.E5,N.G5,N.E5,N.C5,0,N.E5],
+                    [N.B4,N.E5,N.G5,N.E5,N.B4,N.G4,0,N.B4],
+                    [N.C5,N.F5,N.A5,N.F5,N.C5,N.A4,0,N.C5],
+                    [N.G5,N.E5,N.C5,N.E5,N.G5,N.C6,0,N.G5]],
+                  bass: [1,1,0.75,1.5], chordWave:'triangle', melWave:'sine', hatOff:true, kick:false },
+
+                // === SECTION H: Funky groove (I-IV-vi-V) ===
+                { chords: [[N.C4,N.E4,N.G4],[N.F4,N.A4,N.C5],[N.A4,N.C5,N.E5],[N.G4,N.B4,N.D5]],
+                  melody: [
+                    [N.C5,N.C5,N.E5,N.G5,N.C5,N.C5,N.E5,N.G5],
+                    [N.A4,N.A4,N.C5,N.F5,N.A4,N.A4,N.C5,N.F5],
+                    [N.A4,N.C5,N.E5,N.A5,N.E5,N.C5,N.A4,N.E5],
+                    [N.B4,N.D5,N.G5,N.B5,N.G5,N.D5,N.B4,N.D5]],
+                  bass: [1,2,1.5,2], chordWave:'square', melWave:'square', hatOff:false, kick:true },
+
+                // === SECTION I: Soaring (vi-IV-V-I) ===
+                { chords: [[N.A4,N.C5,N.E5],[N.F4,N.A4,N.C5],[N.G4,N.B4,N.D5],[N.C5,N.E5,N.G5]],
+                  melody: [
+                    [N.E5,N.G5,N.A5,N.C6,N.A5,N.G5,N.E5,N.G5],
+                    [N.C5,N.F5,N.A5,N.C6,N.A5,N.F5,N.C5,N.F5],
+                    [N.D5,N.G5,N.B5,N.G5,N.D5,N.G5,N.A5,N.B5],
+                    [N.C6,N.G5,N.E5,N.G5,N.C6,N.E5,N.G5,N.C6]],
+                  bass: [1,1.5,1,2], chordWave:'triangle', melWave:'triangle', hatOff:true, kick:true },
+
+                // === SECTION J: Playful bounce (I-iii-IV-V) ===
+                { chords: [[N.C4,N.E4,N.G4],[N.E4,N.G4,N.B4],[N.F4,N.A4,N.C5],[N.G4,N.B4,N.D5]],
+                  melody: [
+                    [N.G5,N.E5,N.G5,N.E5,N.C5,N.E5,N.C5,N.E5],
+                    [N.B4,N.E5,N.B4,N.E5,N.G5,N.E5,N.G5,N.B5],
+                    [N.A4,N.C5,N.F5,N.C5,N.A4,N.C5,N.F5,N.A5],
+                    [N.G5,N.D5,N.B4,N.D5,N.G5,N.B5,N.A5,N.G5]],
+                  bass: [1,1.5,1,0.75], chordWave:'square', melWave:'triangle', hatOff:false, kick:true },
+
+                // === SECTION K: Emotional peak (vi-V-IV-I) ===
+                { chords: [[N.A4,N.C5,N.E5],[N.G4,N.B4,N.D5],[N.F4,N.A4,N.C5],[N.C4,N.E4,N.G4]],
+                  melody: [
+                    [N.A5,N.G5,N.E5,N.C5,N.E5,N.G5,N.A5,N.C6],
+                    [N.B5,N.A5,N.G5,N.D5,N.G5,N.A5,N.B5,N.G5],
+                    [N.A5,N.F5,N.C5,N.F5,N.A5,N.C6,N.A5,N.F5],
+                    [N.G5,N.E5,N.C5,N.G5,N.E5,N.C6,N.G5,N.E5]],
+                  bass: [1,1,1.5,2], chordWave:'triangle', melWave:'triangle', hatOff:true, kick:true },
+
+                // === SECTION L: Grand finale build (IV-V-I-I) ===
+                { chords: [[N.F4,N.A4,N.C5],[N.G4,N.B4,N.D5],[N.C4,N.E4,N.G4],[N.C5,N.E5,N.G5]],
+                  melody: [
+                    [N.F5,N.A5,N.C6,N.A5,N.F5,N.A5,N.C6,N.A5],
+                    [N.G5,N.B5,N.D5,N.G5,N.B5,N.D5,N.G5,N.B5],
+                    [N.C5,N.E5,N.G5,N.C6,N.G5,N.E5,N.C5,N.E5],
+                    [N.E5,N.G5,N.C6,N.E5,N.G5,N.C6,N.G5,N.C6]],
+                  bass: [1,2,1.5,2], chordWave:'square', melWave:'triangle', hatOff:false, kick:true },
             ];
 
             let barIndex = 0;
             let loopStartTime = audioCtx.currentTime;
+            const totalBars = sections.length * 4; // 48 bars
 
             function scheduleBar() {
                 if (!soundEnabled || !audioCtx || audioCtx.state !== 'running') return;
 
                 const now = loopStartTime + barIndex * bar;
-                const chord = chords[barIndex % chords.length];
-                const melNotes = melodyBars[barIndex % melodyBars.length];
+                const sectionIdx = Math.floor((barIndex % totalBars) / 4);
+                const barInSection = barIndex % 4;
+                const sec = sections[sectionIdx];
+                const chord = sec.chords[barInSection];
+                const melNotes = sec.melody[barInSection];
+                const bassPattern = sec.bass;
+
                 barIndex++;
 
-                // Bouncy staccato chords on each beat
+                // === CHORDS ===
                 for (let b = 0; b < 4; b++) {
                     const t = now + b * beat;
-                    const vol = (b === 0) ? 0.06 : 0.04;
+                    const vol = (b === 0) ? 0.055 : 0.038;
                     chord.forEach(freq => {
                         const osc = audioCtx.createOscillator();
                         const gain = audioCtx.createGain();
-                        osc.type = 'square';
+                        osc.type = sec.chordWave;
                         osc.frequency.value = freq;
                         osc.connect(gain);
                         gain.connect(audioCtx.destination);
@@ -2307,9 +2495,8 @@
                     });
                 }
 
-                // Funky bass line (root note, octave bounce pattern)
+                // === BASS ===
                 const bassRoot = chord[0] / 2;
-                const bassPattern = [1, 1.5, 1, 2];
                 for (let b = 0; b < 4; b++) {
                     const t = now + b * beat;
                     const osc = audioCtx.createOscillator();
@@ -2325,13 +2512,14 @@
                     musicNodes.push(osc);
                 }
 
-                // Peppy 8th-note melody
+                // === MELODY ===
                 for (let n = 0; n < 8; n++) {
-                    const t = now + n * (beat / 2);
                     const freq = melNotes[n];
+                    if (freq === 0) continue; // rest
+                    const t = now + n * (beat / 2);
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
-                    osc.type = 'triangle';
+                    osc.type = sec.melWave;
                     osc.frequency.value = freq;
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -2342,23 +2530,39 @@
                     musicNodes.push(osc);
                 }
 
-                // Hi-hat style noise on off-beats for energy
+                // === DRUMS ===
                 for (let b = 0; b < 4; b++) {
-                    const t = now + b * beat + beat / 2;
+                    // Hi-hat (off-beat or on-beat depending on section)
+                    const hatT = now + b * beat + (sec.hatOff ? beat / 2 : 0);
                     const bufferSize = audioCtx.sampleRate * 0.05;
                     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                     const data = buffer.getChannelData(0);
                     for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                    const noise = audioCtx.createBufferSource();
-                    noise.buffer = buffer;
-                    const gain = audioCtx.createGain();
-                    noise.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    gain.gain.setValueAtTime(0.03, t);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-                    noise.start(t);
-                    noise.stop(t + 0.06);
-                    musicNodes.push(noise);
+                    const hat = audioCtx.createBufferSource();
+                    hat.buffer = buffer;
+                    const hatG = audioCtx.createGain();
+                    hat.connect(hatG);
+                    hatG.connect(audioCtx.destination);
+                    hatG.gain.setValueAtTime(0.025, hatT);
+                    hatG.gain.exponentialRampToValueAtTime(0.001, hatT + 0.05);
+                    hat.start(hatT);
+                    hat.stop(hatT + 0.06);
+                    musicNodes.push(hat);
+
+                    // Kick on beats 1 and 3
+                    if (sec.kick && (b === 0 || b === 2)) {
+                        const kT = now + b * beat;
+                        const kick = audioCtx.createOscillator();
+                        const kG = audioCtx.createGain();
+                        kick.type = 'sine';
+                        kick.frequency.setValueAtTime(150, kT);
+                        kick.frequency.exponentialRampToValueAtTime(40, kT + 0.12);
+                        kG.gain.setValueAtTime(0.06, kT);
+                        kG.gain.linearRampToValueAtTime(0, kT + 0.15);
+                        kick.connect(kG); kG.connect(audioCtx.destination);
+                        kick.start(kT); kick.stop(kT + 0.2);
+                        musicNodes.push(kick);
+                    }
                 }
             }
 
@@ -2685,7 +2889,7 @@
             function scheduleNextHint() {
                 if (currentPhase !== 1) return;
                 const elapsed = (Date.now() - phase1Start) / 1000;
-                const interval = Math.max(500, 2800 - elapsed * 25);
+                const interval = Math.max(200, 2600 - elapsed * 80);
                 gameInterval = setTimeout(() => {
                     spawnHeart();
                     scheduleNextHint();
@@ -2737,11 +2941,11 @@
             heart.className = 'heart';
             
             const rand = Math.random();
-            if (rand < 0.52) {
+            if (rand < 0.45) {
                 heart.classList.add('good');
                 heart.textContent = '❤️';
                 heart.dataset.type = 'good';
-            } else if (rand < 0.67) {
+            } else if (rand < 0.63) {
                 heart.classList.add('bonus');
                 heart.textContent = '💊';
                 heart.dataset.type = 'bonus';
@@ -3470,10 +3674,10 @@
 
         const GOLF_BALL_RADIUS = 8;
         const GOLF_HOLE_RADIUS = 16;
-        const GOLF_MIN_POWER = 3;
-        const GOLF_MAX_POWER = 16;
+        const GOLF_MIN_POWER = 4;
+        const GOLF_MAX_POWER = 20;
         const GOLF_MAX_DIST = 300; // distance in canvas px for max power
-        const GOLF_FRICTION = 0.96;
+        const GOLF_FRICTION = 0.95;
         let golfMouseX = 400;
         let golfMouseY = 300;
 
@@ -4134,15 +4338,16 @@
             
             // Reveal lines one by one
             const lines = finale.querySelectorAll('.love-letter .line');
+            const delays = [1000, 3000, 5000, 12000, 17000, 20000];
             lines.forEach((line, i) => {
                 setTimeout(() => {
                     line.classList.add('visible');
-                }, 1000 + i * 1500);
+                }, delays[i] || (1000 + i * 3000));
             });
-            
+
             // Fireworks!
             const fireworkInterval = setInterval(createFirework, 400);
-            setTimeout(() => clearInterval(fireworkInterval), 15000);
+            setTimeout(() => clearInterval(fireworkInterval), 30000);
         }
         
         function createFirework(targetEl) {
